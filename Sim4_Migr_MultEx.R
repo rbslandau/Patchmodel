@@ -7,7 +7,7 @@
 library(simecol)
 
 # needs ajdustment to your path:
-setwd("~/Desktop/Modelling_Barnthouse/Latest_scripts/results")
+setwd("~/Desktop/Modelling_Twopatch/Latest_scripts/results")
 
 
 # --------------------------------------------------------------------------------- #
