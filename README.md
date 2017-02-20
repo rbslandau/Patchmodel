@@ -9,10 +9,10 @@ Scripts written by Bernhard Kühn, Larissa Hauer, Mira Kattwinkel and Ralf B. Sc
 ## Description of material ##
 The scripts provide the code to run the models and conduct the sensitivity analysis as well as to plot the results.
 
-Sim1\_NoMigr\_SingEx.R:				*Single exposure, No migration*
+Sim1\_NoMigr\_SingEx.R:				*Single exposure, No migration*  
 Sim2.2\_Migr\_assym\_SingEx.R:		*Single exposure, asymmetric migration*  
 Sim2\_Migr\_SingEx.R:				*Single exposure, symmetric migration*   
-Sim3\_NoMigr\_MultEx.R:				*Multiple exposure, No migration*
+Sim3\_NoMigr\_MultEx.R:				*Multiple exposure, No migration*  
 Sim4.2\_Migr\_assym\_MultiEx.R:		*Multiple exposure, asymmetric migration*  
 Sim4\_Migr\_MultiEx.R:				*Multiple exposure, symmetric migration*  
 
