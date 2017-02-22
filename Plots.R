@@ -6,12 +6,12 @@ setwd("~/Desktop/Modelling_Twopatch/Latest_scripts/")
 # read raw data for illustration of dynamics
 nomigr_single <- read.table("results/Z_Sim1_NoMigr_SingEx_daily_Ns.csv",header =T, sep = ",")
 migr_single <- read.table("results/Z_Sim2_symmMigr_SingEx_daily_Ns.csv",header =T, sep = ",")
-migras_single <- read.table("results/Z_Sim2_asymmMigr_SingEx_daily_Ns.csv",header =T, sep = ",")
 nomigr_multi <- read.table("results/Z_Sim3_NoMigr_MultEx_daily_Ns.csv",header =T, sep = ",")
 migr_multi <- read.table("results/Z_Sim4_symmMigr_MultiEx_daily_Ns.csv",header =T, sep = ",")
-migras_multi <- read.table("results/Z_Sim4_asymmMigr_MultiEx_daily_Ns.csv",header =T, sep = ",")
 
+############################
 # use subset for Figure 1
+#############################
 nms <- nomigr_single[nomigr_single$treat =="0.25_0.25_0.25", -1]
 ms <- migr_single[migr_single$treat =="0.25_0.25_0.25", -1]
 nmm <- nomigr_multi[nomigr_multi$treat =="0.25_0.25_0.25", -1]
@@ -32,112 +32,134 @@ legend(50, 3300,
        cex = 0.8,
        col = c("black","grey20","grey50","grey70","red"))
 
+############################
 # Figure 2
+############################
 library('ggplot2')
-nomigr_single$mig <- "no migration" 
-migr_single$mig <- "symm. migration" 
-migras_single$mig <- "asymm. migration" 
-nomigr_multi$mig <- "no migration"
-migr_multi$mig <-  "symm. migration"
-migras_multi$mig <- "asymm. migration" 
+nomigr_single_rec <- read.table("results/Sim1_NoMigr_SingEx_rec_time_new.csv",header =T, sep = ",")
+migr_single_rec <- read.table("results/Sim2_symmMigr_SingEx_rec_time_new.csv",header =T, sep = ",")
+asmigr_single_rec <- read.table("results/Sim2_asymmMigr_SingEx_rec_time_new.csv",header =T, sep = ",")
+nomigr_multi_rec <- read.table("results/Sim3_NoMigr_MultEx_rec_time_new.csv",header =T, sep = ",")
+migr_multi_rec <- read.table("results/Sim4_symmMigr_MultiEx_rec_time_new.csv",header =T, sep = ",")
+asmigr_multi_rec <- read.table("results/Sim4_asymmMigr_MultiEx_rec_time_new.csv",header =T, sep = ",")
 
-nomigr_single$exp <- "single exposure" 
-migr_single$exp <- "single exposure"
-migras_single$exp <- "single exposure" 
-nomigr_multi$exp <- "multiple exposure"
-migr_multi$exp <-  "multiple exposure"
-migras_multi$exp <- "multiple exposure"
+nomigr_single_rec$mig <- "no migration" 
+migr_single_rec$mig <- "symm. migration" 
+asmigr_single_rec$mig <- "asymm. migration" 
+nomigr_multi_rec$mig <- "no migration"
+migr_multi_rec$mig <-  "symm. migration"
+asmigr_multi_rec$mig <- "asymm. migration" 
 
-d <- list(nomigr_single, migr_single, migras_single, nomigr_multi, migr_multi, migras_multi)
-dat_e <- do.call(rbind,d)
-dat_f <- dat_e[ ,-1]
+nomigr_single_rec$exp <- "single exposure" 
+migr_single_rec$exp <- "single exposure"
+asmigr_single_rec$exp <- "single exposure" 
+nomigr_multi_rec$exp <- "multiple exposure"
+migr_multi_rec$exp <-  "multiple exposure"
+asmigr_multi_rec$exp <- "multiple exposure"
+
+d <- list(nomigr_single_rec, migr_single_rec, asmigr_single_rec, nomigr_multi_rec, migr_multi_rec, asmigr_multi_rec)
+library(dplyr)
+dat_f <- do.call(bind_rows,d)
 # check that everything is correct
-nrow(dat_f) == 64*3600*6
+nrow(dat_f) == 64*6
 
 # Convert to % reduction
 dat_f$mor_red <- 1 - dat_f$f_mort
 dat_f$em_red <- 1 - dat_f$f_emerg
 dat_f$gro_red <- 1 - dat_f$f_growth
 
-dat_f$mig <- factor(dat_f$mig)
-dat_f$exp <- factor(dat_f$exp)
-dat_f$mor_red <- factor(dat_f$mor_red)
-dat_f$em_red <- factor(dat_f$em_red)
-dat_f$gro_red <- factor(dat_f$gro_red)
+dat_f$mig <- factor(dat_f$mig, levels=c("no migration", "symm. migration", "asymm. migration"))
+dat_f$exp <- factor(dat_f$exp, levels=c("single exposure","multiple exposure"))
+dat_f$mor_red <- factor(dat_f$mor_red, levels=c(0.75,0.5,0.25,0))
+dat_f$em_red <- factor(dat_f$em_red, labels =c("0%","25%", "50%", "75%"))
+dat_f$gro_red <- factor(dat_f$gro_red, labels =c("0%","25%", "50%", "75%"))
 
-factor(dat_f$mig, levels="asymmetric")
-d$expo_f = factor(d$expo, levels=c("single exposure","multiple exposure"))
-d$Nred_f = factor(d$N_red, levels=c(0.75,0.5,0.25,0))
-d$Ered_f = factor(d$E_red, levels=c(0.75,0.5,0.25,0))
-d$Gred_f = factor(d$G_red, levels=c(0.75,0.5,0.25,0))
-
-eff <- c("no effect", "25%", "50%", "75%")
+# prepare plots
 eff.lab <- c(
   '0' = "no lethal effect",
   '0.25' = paste(eff[2], "lethal effect"),
   '0.5' = paste(eff[3], "lethal effect"),
   '0.75' = paste(eff[4], "lethal effect"))
 
-ggplot(dat_f, aes(x = em_red, y = gro_red, fill = Diff)) + 
+names(dat_f)[c(3,4)]  <- c("first_below0.9K", "min_ni")
+
+ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) + 
   geom_raster() + 
-  facet_grid(mor_red ~ exp + mig , labeller = labeller(.rows=as_labeller(eff.lab))) +
+  facet_grid(mor_red ~ exp + mig, labeller = labeller(.rows=as_labeller(eff.lab))) +
   labs(x = "Reduction of emergence", y = "Reduction in growth", fill = "Recovery time")+
   #scale_fill_gradientn(colors = c("darkblue","gold","darkred")) + 
-  scale_fill_gradientn(colors = rev(c(rgb(215,48,39,maxColorValue = 256),
-                                      rgb(252,141,89,maxColorValue = 256),
-                                      rgb(254,224,144,maxColorValue = 256),
-                                      rgb(224,243,248,maxColorValue = 256),
-                                      rgb(145,191,219,maxColorValue = 256),
-                                      rgb(69,117,180,maxColorValue = 256)))) + 
+  scale_fill_gradientn(colors = rev(c(rgb(215,48,39, maxColorValue = 256),
+                                      rgb(252,141,89, maxColorValue = 256),
+                                      rgb(254,224,144, maxColorValue = 256),
+                                      rgb(224,243,248, maxColorValue = 256),
+                                      rgb(145,191,219, maxColorValue = 256),
+                                      rgb(69,117,180, maxColorValue = 256)))) + 
   #scale_fill_distiller( type = "div" , palette = "RdYlBu" )+ #RdYlBu
-  theme_minimal() +
-  scale_x_continuous(breaks = c(0, 0.25, 0.5, 0.75), labels = eff) + 
-  scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75), labels = eff) 
+  theme_minimal(base_size=15) 
+  
+# uncomment to save  
+# ggsave("Figure_2.png",device="png",height=12,width=16)
 
-## RBS: Könntest Du hier die labels an ticks sowie Achsenbeschriftungen größer machen?
+############################
+# Figure S1 Migration effects
+############################
 
-ggsave("Recovery_Image.pdf",device="pdf",height=9,width=10)
-
-
-# ---------------------------------------------------------------------------------------------------------------------------- #
-# added on 15.02. BK: 
 # plot with difference in migration
-# a) no migr vs. migr (singEx)  =  migr.diff.SingEx
-# b) no migr vs. migr (multEx) = migr.diff.MultEx
-# c) no migr vs. assym migr (singEx) = migr.diff.assym.SingEx
-# d) no migr vs. assym migr (multEx) = migr.diff.assym.MultEx
+# a) no migr vs. migr (singEx) 
+# b) no migr vs. migr (multEx)
+# c) no migr vs. assym migr (singEx) 
+# d) no migr vs. assym migr (multEx)
+# e) assym migr vs. sym migr (singEx) 
+# f) assym migr vs. sym migr (multEx)
+
 
 library(plyr)
-# symetric migration: single exposure and multiple exposure (a and b)
-migr.diff = ddply(d,c("N_red","E_red","G_red"),summarize,
-                  migr.diff.SingEx = Recovery.time..d.[mig == "migration" & expo == "single exposure"] - Recovery.time..d.[mig == "no migration" & expo == "single exposure"],
-                         migr.diff.MultEx = Recovery.time..d.[mig == "migration" & expo == "multiple exposure"] - Recovery.time..d.[mig == "no migration" & expo == "multiple exposure"])
+migr.diff <- ddply(dat_f, c("mor_red","em_red","gro_red"), summarize,
+                  "Sym_mig vs. no_mig single" = Rec_time[mig == "symm. migration" & exp == "single exposure"] - Rec_time[mig == "no migration" & exp == "single exposure"],
+                         "Sym_mig vs. no_mig multi" = Rec_time[mig == "symm. migration" & exp == "multiple exposure"] - Rec_time[mig == "no migration" & exp == "multiple exposure"],
+                    "Asym_mig vs. no_mig single" = Rec_time[mig == "asymm. migration" & exp == "single exposure"] - Rec_time[mig == "no migration" & exp == "single exposure"],
+                   "Asym_mig vs. no_mig multi" = Rec_time[mig == "asymm. migration" & exp == "multiple exposure"] - Rec_time[mig == "no migration" & exp == "multiple exposure"],
+                    "Asym_mig vs. sym_mig single"  = Rec_time[mig == "asymm. migration" & exp == "single exposure"] - Rec_time[mig == "symm. migration" & exp == "single exposure"],
+                     "Asym_mig vs. sym_mig multi"  = Rec_time[mig == "asymm. migration" & exp == "multiple exposure"] - Rec_time[mig == "symm. migration" & exp == "multiple exposure"])
 
-
-# read in assymetric migration 
-b = list()
-for(i in 1:length(fil_sel2)) {
-  b[[i]] = read.csv(fnames[fil_sel2][i], header=T, row.names = 1)
-  b[[i]]$N_red = 1 - b[[i]]$N_red
-  b[[i]]$E_red = 1 - b[[i]]$E_red 
-  b[[i]]$G_red = 1 - b[[i]]$G_red 
-}
-names(b) = c("Migr_assym_SingEx","Migr_assym_MultEx")
-
-# calculate difference between assymetric migration and base scenario (noMigr, SingEx/MultEx)
-migr.diff$migr.diff.assym.SingEx = b$Migr_assym_SingEx$Recovery.time..d. - d$Recovery.time..d.[d$mig == "no migration" & d$expo == "single exposure"] 
-migr.diff$migr.diff.assym.MultEx = b$Migr_assym_MultEx$Recovery.time..d. - d$Recovery.time..d.[d$mig == "no migration" & d$expo == "multiple exposure"] 
-
-
+# labelling for NAs
+# NAs only occur in the multiple exposure scenario
+Na.handle <- data.frame(migr.diff[,1:3])
+Na.handle$mul_sym = ifelse(is.na(dat_f$Rec_time[dat_f$mig == "symm. migration" & dat_f$exp == "multiple exposure"]),1,0)
+Na.handle$mul_nm = ifelse(is.na(dat_f$Rec_time[dat_f$mig == "no migration" & dat_f$exp == "multiple exposure"]),1,0)
+Na.handle$mul_asym = ifelse(is.na(dat_f$Rec_time[dat_f$mig == "asymm. migration" & dat_f$exp == "multiple exposure"]),1,0)
+	
 library(reshape2)
-migr.diff.long = melt(migr.diff,id = 1:3)
-range(migr.diff.long$value,na.rm = T)
+migr.diff.long = melt(migr.diff, id = 1:3)
+range(migr.diff.long$value, na.rm = T)
+
+migr.diff.long.mod <- merge(migr.diff.long, Na.handle, by = c("mor_red","em_red","gro_red"), sort = F) 
+# crucial for for getting the gray values in the correct fields (otherwise everything will mess up!!!)
+migr.diff.long.mod.sort <- migr.diff.long.mod[order(migr.diff.long.mod$mor_red, migr.diff.long.mod$variable), ]
+
+
+na.value = ifelse(is.na(migr.diff.long.mod.sort$value) &
+                   migr.diff.long.mod.sort$no.migr.MultEx == 1 & 
+                   migr.diff.long.mod.sort$migr.MultEx == 1 &
+                   migr.diff.long.mod.sort$variable == "migr.diff.MultEx", "grey40",
+                  ifelse(is.na(migr.diff.long.mod.sort$value) &
+                           migr.diff.long.mod.sort$no.migr.MultEx == 1 & 
+                           migr.diff.long.mod.sort$migr.assym.MultEx == 1 &
+                           migr.diff.long.mod.sort$variable == "migr.diff.assym.MultEx", "grey40",
+                         ifelse(is.na(migr.diff.long.mod.sort$value) &
+                                  migr.diff.long.mod.sort$no.migr.MultEx == 1 & 
+                                  migr.diff.long.mod.sort$migr.assym.MultEx == 0 &
+                                  migr.diff.long.mod.sort$variable == "migr.diff.assym.MultEx", "grey75",
+                                ifelse(is.na(migr.diff.long.mod.sort$value) &
+                                        migr.diff.long.mod.sort$no.migr.MultEx == 1 & 
+                                        migr.diff.long.mod.sort$migr.MultEx == 0 &
+                                        migr.diff.long.mod.sort$variable == "migr.diff.MultEx", "grey75","grey60"))))[which(is.na(migr.diff.long.mod.sort$value))]
 
 # ggplot difference symetric migration
-ggplot(migr.diff.long, aes(x = E_red, y = G_red, fill = value)) + 
+ggplot(migr.diff.long, aes(x = em_red, y = gro_red, fill = value)) + 
   geom_raster() + 
-  facet_grid(as.factor(N_red) ~ variable, labeller = labeller(.rows=as_labeller(eff.lab))) +
-  labs(x = "Reduction of emergence", y = "Reduction in growth", fill = "recovery")+
+  facet_grid(mor_red ~ variable, labeller = labeller(.rows=as_labeller(eff.lab))) +
+  labs(x = "Reduction of emergence", y = "Reduction in growth", fill = "Difference in \n recovery time")+
   #scale_fill_gradientn(colors = c("darkblue","gold","darkred")) + 
   scale_fill_gradientn(colors = rev(c(rgb(215,48,39,maxColorValue = 256),
                                       rgb(252,141,89,maxColorValue = 256),
