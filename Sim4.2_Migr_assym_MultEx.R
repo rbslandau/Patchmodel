@@ -105,7 +105,7 @@ for (N in f_mort){
       )
       
       # Call ODE model  
-      sim(linst1_x)-> res_linst1_x
+      res_linst1_x  <- sim(linst1_x)
       
       # Store results as matrix
       res_linst1_x_mat <-as.matrix(out(res_linst1_x))
@@ -138,7 +138,7 @@ for (N in f_mort){
       )
       
       # Call ODE model  
-      sim(linstx_150)-> res_linstx_150
+      res_linstx_150 <- sim(linstx_150)
       
       # Store results as matrix
       res_linstx_150_mat <-as.matrix(out(res_linstx_150))
@@ -170,7 +170,7 @@ for (N in f_mort){
                           solver = "lsoda"
       )
       # Call ODE model  
-      sim(adult151_190)-> res_adult151_190
+      res_adult151_190  <- sim(adult151_190)
       
       # Store results as matrix
       res_adult151_190_mat <-as.matrix(res_adult151_190@out)
@@ -201,7 +201,7 @@ for (N in f_mort){
                          solver = "lsoda"
       )
       # Call ODE model  
-      sim(earlinst191_360)-> res_earlinst191_360
+      res_earlinst191_360 <- sim(earlinst191_360)
       
       # Store results as matrix
       res_earlinst191_360_mat <-as.matrix(res_earlinst191_360@out)

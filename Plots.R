@@ -77,9 +77,9 @@ dat_f$gro_red <- factor(dat_f$gro_red, labels =c("0%","25%", "50%", "75%"))
 # prepare plots
 eff.lab <- c(
   '0' = "no lethal effect",
-  '0.25' = paste(eff[2], "lethal effect"),
-  '0.5' = paste(eff[3], "lethal effect"),
-  '0.75' = paste(eff[4], "lethal effect"))
+  '0.25' = "25% lethal effect",
+  '0.5' = "50% lethal effect",
+  '0.75' = "75% lethal effect")
 
 names(dat_f)[c(3,4)]  <- c("first_below0.9K", "min_ni")
 
@@ -96,6 +96,11 @@ ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) +
                                       rgb(69,117,180, maxColorValue = 256)))) + 
   #scale_fill_distiller( type = "div" , palette = "RdYlBu" )+ #RdYlBu
   theme_minimal(base_size=15) 
+
+# theme(axis.text = element_text(size=rel(1)), 
+#        axis.title = element_text(size=rel(1.1)),
+#        legend.text = element_text(size=rel(1)),
+#        strip.text = element_text(size=rel(1.1))) +
   
 # uncomment to save  
 # ggsave("Figure_2.png",device="png",height=12,width=16)
@@ -122,42 +127,45 @@ migr.diff <- ddply(dat_f, c("mor_red","em_red","gro_red"), summarize,
                     "Asym_mig vs. sym_mig single"  = Rec_time[mig == "asymm. migration" & exp == "single exposure"] - Rec_time[mig == "symm. migration" & exp == "single exposure"],
                      "Asym_mig vs. sym_mig multi"  = Rec_time[mig == "asymm. migration" & exp == "multiple exposure"] - Rec_time[mig == "symm. migration" & exp == "multiple exposure"])
 
+library(reshape2)
+migr.diff.long <- melt(migr.diff, id = 1:3)
+range(migr.diff.long$value, na.rm = T)
+
 # labelling for NAs
 # NAs only occur in the multiple exposure scenario
-Na.handle <- data.frame(migr.diff[,1:3])
+Na.handle <- data.frame(dat_f[dat_f$mig == "symm. migration" & dat_f$exp == "multiple exposure",c("mor_red","em_red","gro_red")])
+# sorting is the same, we extract only for one of the cases
 Na.handle$mul_sym = ifelse(is.na(dat_f$Rec_time[dat_f$mig == "symm. migration" & dat_f$exp == "multiple exposure"]),1,0)
 Na.handle$mul_nm = ifelse(is.na(dat_f$Rec_time[dat_f$mig == "no migration" & dat_f$exp == "multiple exposure"]),1,0)
 Na.handle$mul_asym = ifelse(is.na(dat_f$Rec_time[dat_f$mig == "asymm. migration" & dat_f$exp == "multiple exposure"]),1,0)
 	
-library(reshape2)
-migr.diff.long = melt(migr.diff, id = 1:3)
-range(migr.diff.long$value, na.rm = T)
-
 migr.diff.long.mod <- merge(migr.diff.long, Na.handle, by = c("mor_red","em_red","gro_red"), sort = F) 
 # crucial for for getting the gray values in the correct fields (otherwise everything will mess up!!!)
 migr.diff.long.mod.sort <- migr.diff.long.mod[order(migr.diff.long.mod$mor_red, migr.diff.long.mod$variable), ]
 
+# check for cases 
+check_data_mig <- migr.diff.long.mod.sort[is.na(migr.diff.long.mod.sort$value ), ]
 
-na.value = ifelse(is.na(migr.diff.long.mod.sort$value) &
-                   migr.diff.long.mod.sort$no.migr.MultEx == 1 & 
-                   migr.diff.long.mod.sort$migr.MultEx == 1 &
-                   migr.diff.long.mod.sort$variable == "migr.diff.MultEx", "grey40",
-                  ifelse(is.na(migr.diff.long.mod.sort$value) &
-                           migr.diff.long.mod.sort$no.migr.MultEx == 1 & 
-                           migr.diff.long.mod.sort$migr.assym.MultEx == 1 &
-                           migr.diff.long.mod.sort$variable == "migr.diff.assym.MultEx", "grey40",
-                         ifelse(is.na(migr.diff.long.mod.sort$value) &
-                                  migr.diff.long.mod.sort$no.migr.MultEx == 1 & 
-                                  migr.diff.long.mod.sort$migr.assym.MultEx == 0 &
-                                  migr.diff.long.mod.sort$variable == "migr.diff.assym.MultEx", "grey75",
-                                ifelse(is.na(migr.diff.long.mod.sort$value) &
-                                        migr.diff.long.mod.sort$no.migr.MultEx == 1 & 
-                                        migr.diff.long.mod.sort$migr.MultEx == 0 &
-                                        migr.diff.long.mod.sort$variable == "migr.diff.MultEx", "grey75","grey60"))))[which(is.na(migr.diff.long.mod.sort$value))]
+# multi symmetric migration is always NA
+# set cases where only symmetric migration == NA to grey 40
+check_data_mig$na.value <- NULL
+check_data_mig$na.value[check_data_mig$mul_nm == 0 &
+               			check_data_mig$variable == "Sym_mig vs. no_mig multi" ] <- "grey25"
+check_data_mig$na.value[check_data_mig$mul_asym == 0 &
+               			check_data_mig$variable == "Asym_mig vs. sym_mig multi" ] <- "grey25"
+# now identify cases for which only no migration or asymmetric is NA
+check_data_mig$na.value[check_data_mig$mul_nm == 0 &
+               			check_data_mig$variable == "Asym_mig vs. no_mig multi" ] <- "grey50"
+check_data_mig$na.value[check_data_mig$mul_asym == 0 &
+               			check_data_mig$variable == "Asym_mig vs. no_mig multi" ] <- "grey75"
+check_data_mig$na.value[is.na(check_data_mig$na.value)] <- "black"
+
+
 
 # ggplot difference symetric migration
 ggplot(migr.diff.long, aes(x = em_red, y = gro_red, fill = value)) + 
-  geom_raster() + 
+  geom_raster(data = subset(migr.diff.long.mod.sort, !is.na(value)), aes(fill = value)) + 
+  geom_raster(data = subset(migr.diff.long.mod.sort, is.na(value)), fill = check_data_mig$na.value) +
   facet_grid(mor_red ~ variable, labeller = labeller(.rows=as_labeller(eff.lab))) +
   labs(x = "Reduction of emergence", y = "Reduction in growth", fill = "Difference in \n recovery time")+
   #scale_fill_gradientn(colors = c("darkblue","gold","darkred")) + 
@@ -169,51 +177,45 @@ ggplot(migr.diff.long, aes(x = em_red, y = gro_red, fill = value)) +
                                       rgb(69,117,180,maxColorValue = 256)
                                       ))) + 
   #scale_fill_distiller( type = "div" , palette = "RdYlBu" )+ #RdYlBu
-  theme_minimal() +
-  scale_x_continuous(breaks = c(0, 0.25, 0.5, 0.75), labels = eff) + 
-  scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75), labels = eff) 
-# Beschriftung hab ich jetzt noch nicht angepasst.
-# ------------------------------------------------------------------------------------------------------------------ #
+  theme_minimal(base_size=15)
 
-max.rec <- 450
-d$Diff_fill <- d$Diff
+# To Dos: add grey scale to legend: grey25 = only sym_mig not recovered, grey50 = only asym_mig not recovered, only no_mig not recovered, black = both not recovered
 
-ggplot(d, aes(x = N_red, y = Diff_fill, col = Ered_f, shape = Gred_f)) + 
-  geom_point() + 
-  facet_grid(expo~ mig) +
-  theme_minimal() +
-  scale_x_continuous(breaks = c(0, 0.25, 0.5, 0.75), labels = eff)
+# ggsave("Figure_S1.png",device="png",height=13,width=18)
 
-####
+############################
+# Figure 3 Effects on Nj
+############################
 
-par(las=1,bty="l",mar=c(4,6,1,1))
-colfun <- colorRampPalette(c("darkblue", "lightblue"))
-d[is.na(d$Diff_fill),"Diff_fill"] <- max.rec
-plot(1:nrow(d),d$Diff_fill,pch = c(1,2,17,19)[d$Nred_f], col = colfun(4)[d$Ered_f],ylim=c(0,450),xaxt="n",ylab = "recovery time", xlab="",yaxt="n")
-axis(2,at=seq(0,400,100))
-axis(2,at=450,"no recovery")
-#legend(x=200,y=400,col=colfun(4),pch=20,legend=paste("reduction of emergence", c(0.75,0.5,0.25,0)*100,"%"))
+# check range of effects on Nj
+range(dat_f$diff_min, na.rm =T)
 
-str_mig <-c("migration","no migration")
-str_expo <- c("single exposure","multiple exposure")
-farb <-  c("darkred","darkorange","cornflowerblue","darkblue")
-pdf("Recovery_Scatter.pdf",height=8,width=10)
-par(mfcol=c(2,2),mar=c(4,6,2,1),las=1,bty="l")
-for(i in 1:2){
-  for(j in 1:2){
-    ind <- which(d$mig == str_mig[i] & d$expo == str_expo[j])
-    plot(y = d[ind,"Diff_fill"], x = 1:length(ind),
-         col =farb[d[ind,"Gred_f"]], 
-         pch = c(17,19,2,1)[d[ind,"Ered_f"]], ylim = c(0,500),
-         ylab = "recovery", xlab = "lethal effect", xaxt= "n", yaxt = "n",
-         main = paste0(str_expo[j],", ", str_mig[i]))
-    axis(2,at=seq(0,400,100))
-    axis(2,at=450,"no recovery")
-    axis(1,at=tapply(1:length(ind),d[ind,"N_red"],median),eff)
-    if(i == 1 & j == 1){
-      legend(x=38,y=500,col=rev(farb),pch=19,legend = eff, title ="hatching effect",ncol=2,bty="n",x.intersp = 0.75, y.intersp = 0.75)
-      legend(x=0,y=500,col=1,pch=rev(c(17,19,2,1)),legend = eff, title = "emergence effect",ncol=2,bty="n",x.intersp = 0.75, y.intersp = 0.75)
-    }
-  }
-}
-dev.off()
+# compute % reduction in Nj compared to related control
+dat_f$diff_min_perc <- round((1-dat_f$min_nj/(dat_f$min_nj + dat_f$diff_min))*100)
+
+# plotting makes only sense for migration scenarios
+dat_f_mig <- dat_f[dat_f$mig != "no migration", ]
+
+ggplot(dat_f_mig, aes(x = em_red, y = gro_red, fill = diff_min_perc)) + 
+  geom_raster() + 
+  facet_grid(mor_red ~ exp + mig, labeller = labeller(.rows=as_labeller(eff.lab))) +
+  labs(x = "Reduction of emergence", y = "Reduction in growth", fill = "% difference")+
+  scale_fill_gradientn(colors = c("white","black"))  + 
+  #scale_fill_distiller( type = "div" , palette = "RdYlBu" )+ #RdYlBu
+  theme_minimal(base_size=15) 
+
+# uncomment to save
+# ggsave("Figure_3.png",device="png",height=12,width=16)
+
+######################################################
+# Figure 4 Extinction for scenario without migration
+#####################################################
+
+# check range of effects on Ni
+range(dat_f$min_ni, na.rm =T)
+
+plot(sort(dat_f$min_ni[dat_f$min_ni< 100]))
+
+
+
+

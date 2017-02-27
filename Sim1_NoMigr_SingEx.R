@@ -22,7 +22,7 @@ N_recov <- K * 0.9
 N_i = N_j <- K 
 
 # parameter for theta-logistic growth
-theta = 1
+theta <- 1
 # we only model logistic growth, but setting the parameter to different values
 # allows to implement theta logistic growth, but see discussion in:
 # Clark F., Brook B.W., Delean S., Reşit Akçakaya H. & Bradshaw C.J.A. (2010) 
@@ -35,13 +35,13 @@ l_earlinst <- 40
 r_earlinst <- -(log((1/0.9^theta-1)*(0.5*K)^theta/(K^theta-(0.5*K)^theta))/(l_earlinst*theta))
 
 # Immigration parameters
-eps_linst = eps_adult = 0 # no migration in this scenario
-d_linst <- 0.7 # 1-d = migration mortality, i.e. 0.3 for late instar nymphs and 0.3 for adults
+eps_linst <- eps_adult <- 0 # no migration in this scenario
+d_linst <- 0.7 # 1-d <- migration mortality, i.e. 0.3 for late instar nymphs and 0.3 for adults
 d_adult <- 0.7
-s = 2 # 
+s <- 2 # 
 
 ### Pesticide Parameters ###
-day_pesticide = 120 # day where the pesticide enters the water column
+day_pesticide <- 120 # day where the pesticide enters the water column
 
 # Reduction of parameters due to pesticide event 
 f_mort <- c(1, 0.75,0.5, 0.25) # reduces population size of population (N_i)
@@ -51,14 +51,14 @@ f_growth <- c(1, 0.75,0.5, 0.25) # reduces growth rate (r_earlinst)
 
 # years
 sim_years <- 10 # simulation years
-i = seq(0,360*sim_years,by = 360)+1 # each start day of the year (e.g. 1, 361 ...)
+i <- seq(0,360*sim_years,by = 360)+1 # each start day of the year (e.g. 1, 361 ...)
 
 # Matrix for population sizes at the beginning of the year
-N_year <- matrix(NA, nrow=sim_years+1, ncol=2, dimnames = list(c(1:(sim_years+1)),c("Ni", "Nj")))
+N_year <- matrix(NA, nrow = sim_years+1, ncol = 2, dimnames = list(c(1:(sim_years+1)),c("Ni", "Nj")))
 N_year[1,] <- c(N_i,N_j)
 
 # Matrix for the daily population sizes, i.a. for plotting
-N_daily <- matrix(NA, nrow=sim_years*360, ncol=3)
+N_daily <- matrix(NA, nrow = sim_years*360, ncol = 3)
 N_daily[1,] <- c(as.integer(1), N_i,N_j)
 N_daily[,1] <- 1:(sim_years*360)
 
