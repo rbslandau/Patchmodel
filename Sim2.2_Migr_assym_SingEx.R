@@ -35,12 +35,12 @@ r_earlinst <- -(log((1/0.9^theta-1)*(0.5*K)^theta/(K^theta-(0.5*K)^theta))/(l_ea
 
 # Immigration parameters (assymetric migration) (from Bergey & Wand 1989 and Mueller 1982)
 # proposed "colonisation cycle" from Mueller:
-eps_linst_up = 0.08  # mobility of late instar nymphs upstream
-eps_linst_down = 0.32 # mobility of late instar nymphs downstream (ca. 80% of total linst migration 0.4)
+eps_linst_up = 0.08  # mobility of late instar larvae upstream
+eps_linst_down = 0.32 # mobility of late instar larvae downstream (ca. 80% of total linst migration 0.4)
 # higher mobility of adults: 
 eps_adult_up = 0.48  # mobility of adults upstream (ca. 80% of total adult migration 0.6)
 eps_adult_down = 0.12 # mobility of adults downstream (ca. 20% of total adult migration 0.6)
-d_linst <- 0.7 # 1-d = migration mortality, i.e. 0.3 for late instar nymphs and 0.2 for adults
+d_linst <- 0.7 # 1-d = migration mortality, i.e. 0.3 for late instar larvae and 0.2 for adults
 d_adult <- 0.7
 s = 2 # # densitiy dependent migration shape parameter
 

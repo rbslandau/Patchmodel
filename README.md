@@ -15,4 +15,5 @@ Sim2\_Migr\_SingEx.R:				*Single exposure, symmetric migration*
 Sim3\_NoMigr\_MultEx.R:				*Multiple exposure, No migration*  
 Sim4.2\_Migr\_assym\_MultiEx.R:		*Multiple exposure, asymmetric migration*  
 Sim4\_Migr\_MultiEx.R:				*Multiple exposure, symmetric migration*  
+Plots\_and\_analysis.R:				*Figures and analyses for all scenarios*
 

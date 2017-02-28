@@ -37,7 +37,7 @@ r_earlinst <- -(log((1/0.9^theta-1)*(0.5*K)^theta/(K^theta-(0.5*K)^theta))/(l_ea
 
 # Immigration parameters
 eps_linst = eps_adult = 0 # no migration in this scenario
-d_linst <- 0.7 # 1-d = migration mortality, i.e. 0.3 for late instar nymphs and 0.3 for adults
+d_linst <- 0.7 # 1-d = migration mortality, i.e. 0.3 for late instar larvae and 0.3 for adults
 d_adult <- 0.7
 s = 2 #
 
