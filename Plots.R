@@ -105,6 +105,7 @@ ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) +
 # uncomment to save  
 # ggsave("Figure_2.png",device="png",height=12,width=16)
 
+
 ############################
 # Figure S1 Migration effects
 ############################
@@ -212,10 +213,26 @@ ggplot(dat_f_mig, aes(x = em_red, y = gro_red, fill = diff_min_perc)) +
 #####################################################
 
 # check range of effects on Ni
-range(dat_f$min_ni, na.rm =T)
+range(dat_f[dat_f$mig=="no migration", ]$min_ni, na.rm =T)
 
-plot(sort(dat_f$min_ni[dat_f$min_ni< 100]))
+# check influence of different variables
+library(car)
+model_lm <- lm(min_ni ~ mor_red + exp + em_red + gro_red, data = dat_f[dat_f$mig=="no migration", ])
+summary(model_lm)
+Anova(lm(model_lm), type=2)
+par(mfrow=c(2,2))
+plot(model_lm)
+# residuals show pattern
+library(hier.part)
+hier.part(dat_f[dat_f$mig=="no migration", ]$min_ni, dat_f[dat_f$mig=="no migration",c(10, 13:15) ])
+# same contribution of reduction due to mortality and emergence
+#
+model_lm2 <- update(model_lm, ~.-exp )
+summary(model_lm2)
 
+
+plot(model_lm)
+Anova(lm(min_ni ~ mor_red + exp + mig + em_red + gro_red, data = dat_f), type=2)
 
 
 
