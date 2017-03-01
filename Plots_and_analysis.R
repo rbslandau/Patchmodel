@@ -105,7 +105,6 @@ ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) +
 # uncomment to save  
 # ggsave("Figure_2.png",device="png",height=12,width=16)
 
-
 ############################
 # Figure S1 Migration effects
 ############################
@@ -118,8 +117,6 @@ ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) +
 # e) assym migr vs. sym migr (singEx) 
 # f) assym migr vs. sym migr (multEx)
 
-
-library(plyr)
 migr.diff <- ddply(dat_f, c("mor_red","em_red","gro_red"), summarize,
                   "Sym_mig vs. no_mig single" = Rec_time[mig == "symm. migration" & exp == "single exposure"] - Rec_time[mig == "no migration" & exp == "single exposure"],
                          "Sym_mig vs. no_mig multi" = Rec_time[mig == "symm. migration" & exp == "multiple exposure"] - Rec_time[mig == "no migration" & exp == "multiple exposure"],
@@ -160,8 +157,6 @@ check_data_mig$na.value[check_data_mig$mul_nm == 0 &
 check_data_mig$na.value[check_data_mig$mul_asym == 0 &
                			check_data_mig$variable == "Asym_mig vs. no_mig multi" ] <- "grey75"
 check_data_mig$na.value[is.na(check_data_mig$na.value)] <- "black"
-
-
 
 # ggplot difference symetric migration
 ggplot(migr.diff.long, aes(x = em_red, y = gro_red, fill = value)) + 
@@ -219,7 +214,6 @@ range(dat_f[dat_f$mig=="no migration", ]$min_ni, na.rm =T)
 # identify scenarios with extinction
 dat_f[dat_f$mig=="no migration" & dat_f$min_ni < 30, ]
 
-
 # check influence of the parameters for extinction risk
 library(car)
 model_lm <- lm(min_ni ~ mor_red + exp + em_red + gro_red, data = dat_f[dat_f$mig=="no migration", ])
@@ -240,76 +234,67 @@ hier.part(dat_f[dat_f$mig=="no migration", ]$min_ni, dat_f[dat_f$mig=="no migrat
 load('results/Sens.out.S2.1.allParams.RData')
 load('results/Sens.out.S2.1.noStructuralChanges.RData')
 
-######################################
-# create matrix with parameter names #
-######################################
-
 # we need to load scenario names
 # if you run the sensitivity analysis yourself, you can use those of the input file
 headers <- read.table("results/Headers.csv",header =T, sep = ",")
 factor.levels <- paste(headers[ ,1],headers[ ,2],headers[ ,3] , sep = "-")
 
-## for sensitivity analysis on 6 parameters
-param.sens <- matrix(rownames(sens.out.S2.1.noStructuralChanges$S), 
-					ncol = length(factor.levels), 
-					nrow = nrow(sens.out.S2.1.noStructuralChanges$S)) 
+#################################
+# Calculate ranks for variables #
+#################################
 
-# indices of ordering the parameters by their value
-indices.order <- apply(sens.out.S2.1.noStructuralChanges$S[,1,], 2 ,function(x) order(x,decreasing = T))
+######################
+# for 6 parameters   #
+######################
 
-# write order with names in table 
-param.sens.order <- matrix(NA, ncol = length(factor.levels), nrow = 6)
-for( i in 1:length(factor.levels)) 
-					{
-					param.sens.order[,i] <- param.sens[indices.order[,i],i]
-					}
-									
+# First order
+nostruct_long <- melt(sens.out.S2.1.noStructuralChanges$S[,1,])
+nostruct_long$ranking <- unlist(by(-nostruct_long$value, nostruct_long$Var2, rank))
+
+# compute average rank
+rank_av1 <- aggregate(nostruct_long$ranking, list(nostruct_long$Var1), mean)
+names(rank_av1)[2] <- "Avg. rank first order, no structural" 
+
+# Total effect
+nostruct_long2 <- melt(sens.out.S2.1.noStructuralChanges$T[,1,])
+nostruct_long2$ranking <- unlist(by(-nostruct_long2$value, nostruct_long2$Var2, rank))
+
+# compute average rank
+rank_av2 <- aggregate(nostruct_long2$ranking, list(nostruct_long2$Var1), mean)
+names(rank_av2)[2] <- "Avg. rank total order, no structural" 
+								
 ######################
 # for all parameters 
 ######################
 
-# create matrix with parameter names
-param.sens.all <- matrix(rownames(sens.out.S2.1.allParams$S),
-						ncol = length(factor.levels), 
-						nrow = nrow(sens.out.S2.1.allParams$S)) 
-# indices of ordering the parameters by their value
-indices.order.all <- apply(sens.out.S2.1.allParams$S[,1,], 2, function(x) order(x,decreasing = T))
+# First order
+struct_long <- melt(sens.out.S2.1.allParams$S[,1,])
+struct_long$ranking <- unlist(by(-struct_long$value, struct_long$Var2, rank))
 
-# write order with names in table 
-param.sens.order.all = matrix(NA, ncol = length(factor.levels), nrow = nrow(sens.out.S2.1.allParams$S))
-for( i in 1:length(factor.levels)) 
-			{
-  			param.sens.order.all[,i] = param.sens.all[indices.order.all[,i],i]
-			}
-# ----------------------------------------------------------------
-# calculate maximum percentage, which place each parameter takes
-# ---------------------------------------------------------------- 
+# compute average rank
+rank_av3 <- aggregate(struct_long$ranking, list(struct_long$Var1), mean)
+names(rank_av3)[2] <- "Avg. rank first order, structural" 
 
-# 1. for all parameters
-param.order.list1 <- apply(as.data.frame(param.sens.order.all), 1, table)
-param.order.perc1 <- lapply(param.order.list1, function(x) max(x)/length(factor.levels)*100)
-params.order.names1 <- NULL
-for(i in 1:8) {
-  params.order.names1[i] <- names(which(param.order.list1[[i]] == max(param.order.list1[[i]])))
-}
-# day_adult and eps_adult score similar on 8th row
-Param.order.sens1 <- as.data.frame(cbind(Parameter = params.order.names1, percent = param.order.perc1))
-print(Param.order.sens1)
+# Total effect
+struct_long2 <- melt(sens.out.S2.1.allParams$T[,1,])
+struct_long2$ranking <- unlist(by(-struct_long2$value, struct_long2$Var2, rank))
 
-# 2. for all the main parameters (without structural ones)
-param.order.list2 <- apply(as.data.frame(param.sens.order), 1, table)
-param.order.perc2 <- lapply(param.order.list2, function(x) max(x)/length(factor.levels)*100)
-params.order.names2 <- NULL
-for(i in 1:6) {
-  params.order.names2[i] <- names(which(param.order.list2[[i]] == max(param.order.list2[[i]])))
-}
-Param.order.sens2 <- as.data.frame(cbind(Parameter = params.order.names2,percent = param.order.perc2))
+# compute average rank
+rank_av4 <- aggregate(struct_long2$ranking, list(struct_long2$Var1), mean)
+names(rank_av4)[2] <- "Avg. rank total order, structural" 
 
-print(Param.order.sens2)
+# combine all into table
+do.call("merge", list(rank_av1,rank_av2, rank_av3, rank_av4))
 
-# ------------------------------------------------- #
-# plot of indices without structural model changes
-# ------------------------------------------------- #
+final_rank_table <- join_all(list(rank_av1,rank_av2, rank_av3, rank_av4), type="full")
+
+# order table by structural index
+fin_rank_exp <- final_rank_table[order(final_rank_table[ ,4]), ]
+write.csv(fin_rank_exp, "results/fin_rank_exp.csv", row.names=F)
+
+# ---------------------------------------------------------------------- #
+# Plot indices for sensitivity analysis without structural model changes
+# ---------------------------------------------------------------------- #
 
 library(sensitivity)
 library(plotrix)
@@ -352,7 +337,8 @@ plotCI(x = seq(1.2,6.2,by = 1),sens.out.S2.1.noStructuralChanges$T[,1,i],
 dev.off()
 
 # ------------------------------------------------------------------------------------ #
-# plot of indices with structural model changes (length of emergence period and eggs)
+# Plot indices for sensitivity analysis including structural model changes
+# (length of emergence period and eggs)
 # ------------------------------------------------------------------------------------ #
 
 # change order of length_eggs and length_emergence
@@ -405,7 +391,7 @@ plotCI(x = seq(1.2,8.2,by = 1),sens.out.S2.1.allParams$T[,1,i],
 dev.off()
 
 # ----------------------------------------------------------- #
-# Use Cluster analysis to find patterns in sensitivity indices
+# Use Cluster analysis to evaluate similarity in sensitivity indices
 # ----------------------------------------------------------- #
 
 # ##################################################### #
@@ -420,7 +406,7 @@ rownames(f.o.sensInd) <- factor.levels
 
 # hierarchical Clustering
 d <- dist(f.o.sensInd, method = "euclidean") # distance matrix
-fit.f.o.part <- hclust(d, method="complete")
+fit.f.o.part <- hclust(d, method="single")
 # create clusters with high within cluster similarity
 plot(as.phylo(fit.f.o.part))
 
@@ -430,7 +416,7 @@ rownames(total.sensInd) <- factor.levels
 
 # hierarchical Clustering
 d_tot <- dist(total.sensInd, method = "euclidean") # distance matrix
-fit.t.o.part <- hclust(d_tot, method="complete")
+fit.t.o.part <- hclust(d_tot, method="single")
 plot(as.phylo(fit.t.o.part)) # display dendogram
 
 # ##################################################### #
@@ -455,100 +441,108 @@ d2 <- dist(total.sensInd, method = "euclidean") # distance matrix
 fit.t.o.all <- hclust(d2, method="complete")
 plot(as.phylo(fit.t.o.all))
 
+###############################################################
 # Figure 4: combine cluster analysis with representative plots
+###############################################################
 
 # .................................................................................................. #
 # function to plot sensitivity analysis and cluster analysis of first order indices of 6 parameters
-plot.6param.sens.ind = function(simulation,legend = F,title.col = "black") {
-  ind= which(factor.levels == as.character(simulation))
-  # plot first order sensitivity indices with CI:
-  plotCI(x = seq(0.5,3,0.5),y = sens.out.S2.1.noStructuralChanges$S[,1,ind],
-         col = "gray50",
-         ylim = c(-0.2,1),xlim = c(0.4,3.5),pch = 21,
-         ylab = "sensitivity indices",xlab = "parameters",
-         li=as.vector(sens.out.S2.1.noStructuralChanges$S[,"min. c.i.",ind]), 
-         ui=as.vector(sens.out.S2.1.noStructuralChanges$S[,"max. c.i.",ind]),
-         sfrac = 0,las = 1,cex = 1.8,xaxt = "n")
-title(factor.levels[ind],line = -1.2,adj = 0.02,col.main = title.col)
-axis(1,at = seq(0.5,3,0.5),labels = c(expression(epsilon['linst']),
+
+plot.6param.sens.ind <- function(simulation, legend = F, title.col = "black") 
+			{
+  			ind <- which(factor.levels == as.character(simulation))
+  			# plot first order sensitivity indices with CI:
+  			plotCI(x = seq(0.5,3,0.5),y = sens.out.S2.1.noStructuralChanges$S[,1,ind],
+         	col = "gray50",
+         	ylim = c(-0.2,1),xlim = c(0.4,3.5),pch = 21,
+         	ylab = "sensitivity indices",xlab = "parameters",
+         	li=as.vector(sens.out.S2.1.noStructuralChanges$S[,"min. c.i.",ind]), 
+         	ui=as.vector(sens.out.S2.1.noStructuralChanges$S[,"max. c.i.",ind]),
+         	sfrac = 0,las = 1,cex = 1.8,xaxt = "n")
+			title(factor.levels[ind],line = -1.2,adj = 0.02,col.main = title.col)
+			axis(1,at = seq(0.5,3,0.5),labels = c(expression(epsilon['linst']),
                            expression(epsilon['adult']),expression('d'['linst']),
                            expression('d'['adult']),"s",expression('day'['pesticide'])))
-par(new=TRUE)
+			par(new=TRUE)
 
-#plot total effect sensitivity indices with CI
-plotCI(x = seq(0.7,3.2,length.out = 6),sens.out.S2.1.noStructuralChanges$T[,1,ind],
-       li=as.vector(sens.out.S2.1.noStructuralChanges$T[,"min. c.i.",ind]), 
-       ui=as.vector(sens.out.S2.1.noStructuralChanges$T[,"max. c.i.",ind]),
-       ylim = c(-0.2,1),xlim = c(0.4,3.5),
-       xlab = "",ylab = "",
-       pch = 17,sfrac = 0,cex = 1.8,
-       axes = FALSE)
-if(legend == T) {
-#legend
- legend("topright",
-        c("first order effects","total effects"),
-        pch = c(1,17))
-}
-}
+			#plot total effect sensitivity indices with CI
+			plotCI(x = seq(0.7,3.2,length.out = 6),sens.out.S2.1.noStructuralChanges$T[,1,ind],
+     	    li=as.vector(sens.out.S2.1.noStructuralChanges$T[,"min. c.i.",ind]), 
+       		ui=as.vector(sens.out.S2.1.noStructuralChanges$T[,"max. c.i.",ind]),
+      		 ylim = c(-0.2,1),xlim = c(0.4,3.5),
+       		xlab = "",ylab = "",
+       		pch = 17,sfrac = 0,cex = 1.8,
+       		axes = FALSE)
+			if(legend == T) 
+					{
+					#legend
+ 					legend("topright",
+      				  c("first order effects","total effects"),
+       					 pch = c(1,17))
+					}
+			}
 
-# .................................................................................................. #
-# function to plot sensitivity analysis and cluster analysis of first order indices of 8 parameters
+# ......................... #
+# function for 8 parameters
 
-plot.8param.sens.ind = function(simulation,legend = F,title.col = "black") {
-  ind= which(factor.levels == as.character(simulation))
-  # plot first order sensitivity indices with CI:
-  plotCI(x = seq(0.5,4,0.5),y = sens.out.S2.1.allParams$S[,1,ind],
+plot.8param.sens.ind <- function(simulation,legend = F,title.col = "black") 
+    {
+    ind <- which(factor.levels == as.character(simulation))
+ 	 # plot first order sensitivity indices with CI:
+  	plotCI(x = seq(0.5,4,0.5),y = sens.out.S2.1.allParams$S[,1,ind],
          col = "gray50",
          ylim = c(-0.2,1),xlim = c(0.4,4.5),pch = 21,
          ylab = "sensitivity indices",xlab = "parameters",
          li=as.vector(sens.out.S2.1.allParams$S[,"min. c.i.",ind]), 
          ui=as.vector(sens.out.S2.1.allParams$S[,"max. c.i.",ind]),
          sfrac = 0,las = 1,cex = 1.8,xaxt = "n")
-  title(factor.levels[ind],line = -1.2,adj = 0.02,col.main = title.col)
-  axis(1,at = seq(0.5,4,0.5),labels = c(expression(epsilon['linst']),
+  	title(factor.levels[ind],line = -1.2,adj = 0.02,col.main = title.col)
+  	axis(1,at = seq(0.5,4,0.5),labels = c(expression(epsilon['linst']),
                              expression(epsilon['adult']),expression('d'['linst']),
                              expression('d'['adult']),"s",expression('day'['pesticide']),
                              expression('l'['emergence']),expression('l'['eggs'])))
-  par(new=TRUE)
+  	par(new=TRUE)
   
-  #plot total effect sensitivity indices with CI
-  plotCI(x = seq(0.7,4.2,length.out = 8),sens.out.S2.1.allParams$T[,1,ind],
+  	#plot total effect sensitivity indices with CI
+  	plotCI(x = seq(0.7,4.2,length.out = 8),sens.out.S2.1.allParams$T[,1,ind],
          li=as.vector(sens.out.S2.1.allParams$T[,"min. c.i.",ind]), 
          ui=as.vector(sens.out.S2.1.allParams$T[,"max. c.i.",ind]),
          ylim = c(-0.2,1),xlim = c(0.4,4.5),
          xlab = "",ylab = "",
          pch = 17,sfrac = 0,cex = 1.8,
          axes = FALSE)
-  if(legend == T) {
-    #legend
-    legend("topright",
+  	if(legend == T) 
+  			{
+    			#legend
+   			 legend("topright",
            c("first order effects","total effects"),
            pch = c(1,17))
-  }
-}
+  			}
+	}
+	
+	
 # .................................................................................................. #
 
 
 # plot first order indices and cluster analysis of 6 parameters: 
-pdf("sensitivity analysis.pdf",height=8,width=8)
+pdf("Figure_4.pdf",height=8,width=8)
 
 layout(matrix(c(1,2,
                 1,3,
                 1,4,
                 1,5), 4, 2, byrow = TRUE),widths=c(1,1.2))
 par(mar = c(1.5,2,1,1),oma = c(5,0,1,1))
-plot(as.phylo(fit.f.o.part), cex = 0.9, label.offset = 0.05,
-     tip.color = c("gray60","gray10","gray10","gray60")[groups1]) 
+plot(as.phylo(fit.f.o.part), cex = 1, label.offset = 0.02) 
 
 # examples for each cluster:
-# 1. 0.5-0.25-0.25
-plot.6param.sens.ind("0.5-0.25-0.25",legend = T,title.col = "gray60")
-# 2. 0.75-0.75-0.25
-plot.6param.sens.ind("0.75-0.75-0.25",title.col = "gray10")
-# 3.0-0-0
-plot.6param.sens.ind("0-0-0",title.col = "gray60")
+# 1. 
+plot.6param.sens.ind("50-50-75", legend = T)
+# 2. 
+plot.6param.sens.ind("0-0-0")
+# 3.
+plot.6param.sens.ind("75-75-75")
 # 0.5-0.5-0.75
-plot.6param.sens.ind("0.5-0.5-0.75",title.col = "gray10")
+plot.6param.sens.ind("50-25-25")
 
 
 # plot first order indices and cluster analysis of 8 parameters: 
