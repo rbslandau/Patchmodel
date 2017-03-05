@@ -23,8 +23,8 @@ Sim4\_Migr\_MultiEx.R:				*Multiple exposure, symmetric migration*
 
 Plots\_and\_analysis.R:				*Figures and analyses for all scenarios*  
 
-Sensitivity\_Sim2.1\_6parameters\_parallel.R 	*Sensitivity analyses excluding structural parameters*  
+Sensitivity\_Sim2.1\_6parameters\_parallel.R: 	*Sensitivity analyses excluding structural parameters*  
 
-Sensitivity\_Sim2.1\_8parameters\_parallel.R	*Sensitivity analyses including structural parameters*
+Sensitivity\_Sim2.1\_8parameters\_parallel.R:	*Sensitivity analyses including structural parameters*
 
 
