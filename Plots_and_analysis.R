@@ -103,7 +103,7 @@ ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) +
 #        strip.text = element_text(size=rel(1.1))) +
   
 # uncomment to save  
-# ggsave("Figure_2.png",device="png",height=12,width=16)
+# ggsave("Figure_2.pdf",device="pdf",height=12,width=16)
 
 ############################
 # Figure S1 Migration effects
@@ -117,6 +117,7 @@ ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) +
 # e) assym migr vs. sym migr (singEx) 
 # f) assym migr vs. sym migr (multEx)
 
+library(plyr)
 migr.diff <- ddply(dat_f, c("mor_red","em_red","gro_red"), summarize,
                   "Sym_mig vs. no_mig single" = Rec_time[mig == "symm. migration" & exp == "single exposure"] - Rec_time[mig == "no migration" & exp == "single exposure"],
                          "Sym_mig vs. no_mig multi" = Rec_time[mig == "symm. migration" & exp == "multiple exposure"] - Rec_time[mig == "no migration" & exp == "multiple exposure"],
@@ -148,37 +149,72 @@ check_data_mig <- migr.diff.long.mod.sort[is.na(migr.diff.long.mod.sort$value ),
 # set cases where only symmetric migration == NA to grey 40
 check_data_mig$na.value <- NULL
 check_data_mig$na.value[check_data_mig$mul_nm == 0 &
-               			check_data_mig$variable == "Sym_mig vs. no_mig multi" ] <- "grey25"
+               			check_data_mig$variable == "Sym_mig vs. no_mig multi" ] <- "grey75"
 check_data_mig$na.value[check_data_mig$mul_asym == 0 &
-               			check_data_mig$variable == "Asym_mig vs. sym_mig multi" ] <- "grey25"
+               			check_data_mig$variable == "Asym_mig vs. sym_mig multi" ] <- "grey75"
 # now identify cases for which only no migration or asymmetric is NA
 check_data_mig$na.value[check_data_mig$mul_nm == 0 &
                			check_data_mig$variable == "Asym_mig vs. no_mig multi" ] <- "grey50"
 check_data_mig$na.value[check_data_mig$mul_asym == 0 &
-               			check_data_mig$variable == "Asym_mig vs. no_mig multi" ] <- "grey75"
+               			check_data_mig$variable == "Asym_mig vs. no_mig multi" ] <- "grey25"
 check_data_mig$na.value[is.na(check_data_mig$na.value)] <- "black"
 
-# ggplot difference symetric migration
-ggplot(migr.diff.long, aes(x = em_red, y = gro_red, fill = value)) + 
+# whole plot for difference in migration
+p1 <- ggplot(migr.diff.long, aes(x = em_red, y = gro_red)) + 
   geom_raster(data = subset(migr.diff.long.mod.sort, !is.na(value)), aes(fill = value)) + 
-  geom_raster(data = subset(migr.diff.long.mod.sort, is.na(value)), fill = check_data_mig$na.value) +
+  geom_raster(data = subset(migr.diff.long.mod.sort, is.na(value)),fill = check_data_mig$na.value) +
   facet_grid(mor_red ~ variable, labeller = labeller(.rows=as_labeller(eff.lab))) +
   labs(x = "Reduction of emergence", y = "Reduction in growth", fill = "Difference in \n recovery time")+
-  #scale_fill_gradientn(colors = c("darkblue","gold","darkred")) + 
   scale_fill_gradientn(colors = rev(c(rgb(215,48,39,maxColorValue = 256),
                                       rgb(252,141,89,maxColorValue = 256),
                                       rgb(254,224,144,maxColorValue = 256),
                                       rgb(224,243,248,maxColorValue = 256),
                                       rgb(145,191,219,maxColorValue = 256),
                                       rgb(69,117,180,maxColorValue = 256)
-                                      ))) + 
-  #scale_fill_distiller( type = "div" , palette = "RdYlBu" )+ #RdYlBu
-  theme_minimal(base_size=15)
+  ))) +
+  theme_minimal(base_size=15) 
 
-# -----------To Dos ---------------
-# add grey scale to legend: grey25 = only sym_mig not recovered, grey50 = only asym_mig not recovered, only no_mig not recovered, black = both not recovered
+# Plot only for NAs
+p2 <-   ggplot(migr.diff.long, aes(x = em_red, y = gro_red)) + 
+  facet_grid(mor_red ~ variable, labeller = labeller(.rows=as_labeller(eff.lab))) +
+  geom_raster(data = subset(migr.diff.long.mod.sort, is.na(value)),aes(fill = check_data_mig$na.value)) +
+  scale_fill_manual(name = "No recovery", values = c('black','gray25','gray50','gray75'),
+                    labels = c("both","only no_mig","only asym_mig","only sym_mig")) +
+  theme_minimal(base_size=15) 
 
-# ggsave("Figure_S1.png",device="png",height=13,width=18)
+# save legends extra 
+
+# recovery legend 
+tmp1 <- ggplot_gtable(ggplot_build(p1))
+leg1 <- which(sapply(tmp1$grobs, function(x) x$name) == "guide-box")
+legend1 <- tmp1$grobs[[leg1]]
+
+legend1_fin <- legend1
+legend1_fin$width <- legend1$width*5
+legend1_fin$height <- legend1$height*5
+
+# NA.legend
+tmp2 <- ggplot_gtable(ggplot_build(p2))
+leg2 <- which(sapply(tmp2$grobs, function(x) x$name) == "guide-box")
+legend2 <- tmp2$grobs[[leg2]]
+
+library("grid")
+pdf("Figure_S1.pdf", width = 18, height = 10) 
+# plot 
+grid.newpage()
+pushViewport( viewport( layout = grid.layout( 1 , 2 , widths = unit( c(0.9,0.1) , "npc" ) ) ) ) # define layout
+print( p1 + theme(legend.position="none") , vp = viewport( layout.pos.row = 1 , layout.pos.col = 1 ) ) # plot p1 without legend
+upViewport(0)
+# draw legends extra 
+vp2 <- viewport( width = unit(1,"npc") , x = 0.94 , y = 0.6) # specifies postition of legend 1
+vp3 <- viewport( width = unit(1,"npc") , x = 0.94 , y = 0.42) # specifies postition of legend 2
+pushViewport(vp2)
+grid.draw( legend1_fin )
+popViewport()
+pushViewport(vp3)
+grid.draw( legend2 )
+popViewport()
+dev.off()
 
 ############################
 # Figure 3 Effects on Nj
@@ -202,7 +238,7 @@ ggplot(dat_f_mig, aes(x = em_red, y = gro_red, fill = diff_min_perc)) +
   theme_minimal(base_size=15) 
 
 # uncomment to save
-# ggsave("Figure_3.png",device="png",height=12,width=16)
+# ggsave("Figure_3.pdf",device="pdf",height=12,width=16)
 
 ######################################################
 # Extinction for scenario without migration
@@ -228,7 +264,7 @@ hier.part(dat_f[dat_f$mig=="no migration", ]$min_ni, dat_f[dat_f$mig=="no migrat
 # same contribution of reduction due to mortality and emergence
 #
 ######################################################
-# Figure 4 & 5 sensitivity analysis
+# Figure 4 & Figure S2:4 sensitivity analysis
 #####################################################
 
 load('results/Sens.out.S2.1.allParams.RData')
@@ -300,11 +336,11 @@ library(sensitivity)
 library(plotrix)
 library(colorRamps)
 
-outfile <- "Sens.analysis_MainParams"
-pdf(file = file.path(getwd(), paste0("results/figures/", outfile, ".pdf")),
-    width = 25, height = 25)
+outfile <- "Figure_S2"
+pdf(file = file.path(getwd(), paste0(outfile, ".pdf")),
+    width = 25, height = 20)
 
-par(mfrow = c(8,8),mar = c(2,0,2,3))
+par(mfrow = c(8,8), mar = c(2,3,1,2))
 for (i in 1:length(factor.levels)) {
 # plot first order sensitivity indices with CI:
 plotCI(x = 1:6,y = sens.out.S2.1.noStructuralChanges$S[,1,i],
@@ -351,11 +387,11 @@ length_eggsT <- sens.out.S2.1.allParams$T[7,,]
 sens.out.S2.1.allParams$T[7,,] <- sens.out.S2.1.allParams$T[8,,]
 sens.out.S2.1.allParams$T[8,,] <- length_eggsT
 
-outfile <- "Sens.analysis_withStructuralParams"
-pdf(file = file.path(getwd(), paste0("results/figures/", outfile, ".pdf")),
-    width = 25, height = 25)
+outfile <- "Figure_S3"
+pdf(file = file.path(getwd(), paste0(outfile, ".pdf")),
+    width = 25, height = 20)
 
-par(mfrow = c(8,8),mar = c(2,0,2,3))
+par(mfrow = c(8,8), mar = c(2,3,1,2))
 for(i in 1:length(factor.levels)) {
   
 # plot first order sensitivity indices with CI: 
@@ -370,7 +406,7 @@ title(factor.levels[i],line = -1,adj = 0)
 axis(1,at = 1:8,labels = c(expression(epsilon['linst']),
                            expression(epsilon['adult']),expression('d'['linst']),
                            expression('d'['adult']),"s",expression('day'['pesticide']),
-                           expression('l'['emergence']),expression('l'['eggs'])))
+                           expression('l'['adult']),expression('l'['eggs'])))
 par(new=TRUE)
 
 #plot total effect sensitivity indices with CI
@@ -399,7 +435,6 @@ dev.off()
 # ##################################################### #
 
 library(ape)
-
 # hierarchical clustering for first order indices 
 f.o.sensInd <- t(sens.out.S2.1.noStructuralChanges$S[,1,])
 rownames(f.o.sensInd) <- factor.levels
@@ -408,7 +443,8 @@ rownames(f.o.sensInd) <- factor.levels
 d <- dist(f.o.sensInd, method = "euclidean") # distance matrix
 fit.f.o.part <- hclust(d, method="single")
 # create clusters with high within cluster similarity
-plot(as.phylo(fit.f.o.part))
+par(cex=1.1, mar = c(4,2,2,4))
+plot(as.dendrogram(fit.f.o.part), xlab = "Distance", horiz=T)
 
 # hierarchical clustering for total order indices 
 total.sensInd <- t(sens.out.S2.1.noStructuralChanges$T[,1,])
@@ -418,6 +454,13 @@ rownames(total.sensInd) <- factor.levels
 d_tot <- dist(total.sensInd, method = "euclidean") # distance matrix
 fit.t.o.part <- hclust(d_tot, method="single")
 plot(as.phylo(fit.t.o.part)) # display dendogram
+
+# join data and cluster
+sensInd_nostruct <- cbind(f.o.sensInd, total.sensInd)
+d_fin_no_struct <- dist(sensInd_nostruct, method = "euclidean") #
+fit.nostruct.both <- hclust(d_fin_no_struct, method="single")
+par(cex=1.1, mar = c(4,2,2,4))
+plot(as.dendrogram(fit.nostruct.both), xlab = "Distance", horiz=T)
 
 # ##################################################### #
 # for sensitivity indices WITH structural parameters
@@ -441,11 +484,17 @@ d2 <- dist(total.sensInd, method = "euclidean") # distance matrix
 fit.t.o.all <- hclust(d2, method="complete")
 plot(as.phylo(fit.t.o.all))
 
+# join data and cluster
+sensInd_struct <- cbind(f.o.sensInd, total.sensInd)
+d_fin <- dist(sensInd_struct, method = "euclidean") #
+fit.t.o.both <- hclust(d_fin, method="single")
+quartz()
+par(cex=1, mar = c(4,2,2,4))
+plot(as.dendrogram(fit.t.o.both), xlab = "Distance", horiz=T)
+dev.off()
 ###############################################################
-# Figure 4: combine cluster analysis with representative plots
+# Figure 4 and S4: combine cluster analysis with representative plots
 ###############################################################
-
-# .................................................................................................. #
 # function to plot sensitivity analysis and cluster analysis of first order indices of 6 parameters
 
 plot.6param.sens.ind <- function(simulation, legend = F, title.col = "black") 
@@ -477,7 +526,7 @@ plot.6param.sens.ind <- function(simulation, legend = F, title.col = "black")
 					{
 					#legend
  					legend("topright",
-      				  c("first order effects","total effects"),
+      				  c("first order","total effects"),
        					 pch = c(1,17))
 					}
 			}
@@ -500,7 +549,7 @@ plot.8param.sens.ind <- function(simulation,legend = F,title.col = "black")
   	axis(1,at = seq(0.5,4,0.5),labels = c(expression(epsilon['linst']),
                              expression(epsilon['adult']),expression('d'['linst']),
                              expression('d'['adult']),"s",expression('day'['pesticide']),
-                             expression('l'['emergence']),expression('l'['eggs'])))
+                             expression('l'['adult']),expression('l'['eggs'])))
   	par(new=TRUE)
   
   	#plot total effect sensitivity indices with CI
@@ -514,8 +563,8 @@ plot.8param.sens.ind <- function(simulation,legend = F,title.col = "black")
   	if(legend == T) 
   			{
     			#legend
-   			 legend("topright",
-           c("first order effects","total effects"),
+   			 legend("top",
+           c("first order","total effects"),
            pch = c(1,17))
   			}
 	}
@@ -525,14 +574,14 @@ plot.8param.sens.ind <- function(simulation,legend = F,title.col = "black")
 
 
 # plot first order indices and cluster analysis of 6 parameters: 
-pdf("Figure_4.pdf",height=8,width=8)
+pdf("Figure_4.pdf", height=8, width=14)
 
 layout(matrix(c(1,2,
                 1,3,
                 1,4,
-                1,5), 4, 2, byrow = TRUE),widths=c(1,1.2))
-par(mar = c(1.5,2,1,1),oma = c(5,0,1,1))
-plot(as.phylo(fit.f.o.part), cex = 1, label.offset = 0.02) 
+                1,5), 4, 2, byrow = TRUE), widths=c(1.5,1.2))
+par(mar = c(1.5,4,1,4), oma = c(5,0,1,1))
+plot(as.dendrogram(fit.nostruct.both), horiz=T, xlim = c(0.4,0))
 
 # examples for each cluster:
 # 1. 
@@ -540,30 +589,31 @@ plot.6param.sens.ind("50-50-75", legend = T)
 # 2. 
 plot.6param.sens.ind("0-0-0")
 # 3.
-plot.6param.sens.ind("75-75-75")
+plot.6param.sens.ind("75-50-50")
 # 0.5-0.5-0.75
-plot.6param.sens.ind("50-25-25")
+plot.6param.sens.ind("50-0-0")
+dev.off()
 
 
 # plot first order indices and cluster analysis of 8 parameters: 
+pdf("Figure_S4.pdf", height=8, width=14)
 
 layout(matrix(c(1,2,
                 1,3,
                 1,4,
-                1,5), 4, 2, byrow = TRUE),widths=c(1,1.2))
-par(mar = c(1.5,2,1,1),oma = c(5,0,1,1))
-plot(as.phylo(fit.f.o.all), cex = 0.9, label.offset = 0.05,
-     tip.color = c("gray60","gray10","gray60","gray10")[groups3]) 
+                1,5), 4, 2, byrow = TRUE),widths=c(1.5,1.2))
+par(mar = c(1.5,4,1,4), oma = c(5,0,1,1))
+plot(as.dendrogram(fit.t.o.both), horiz=T, xlim = c(0.4,0))
 
 # examples for each cluster:
-# 1. 0-0-0
-plot.8param.sens.ind("0-0-0",title.col = "gray60")
-# 2. 0.75-0-0.5
-plot.8param.sens.ind("0.75-0-0.5",title.col = "gray10")
-# 3.0.5-0.5-0
-plot.8param.sens.ind("0.5-0.5-0",title.col = "gray60")
-# 0.75-0.25-0.25
-plot.8param.sens.ind("0.75-0.25-0.25",title.col = "gray10")
+# 1. 50-50-75
+plot.8param.sens.ind("50-50-75", legend = T)
+# 2. 50-25-50
+plot.8param.sens.ind("50-25-50")
+# 3.50-50-25
+plot.8param.sens.ind("50-50-25")
+# 0-25-0
+plot.8param.sens.ind("0-25-0")
 dev.off()
 
 
