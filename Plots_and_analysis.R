@@ -31,6 +31,32 @@ legend(50, 3300,
        lwd = c(2,2,2,2),
        cex = 0.8,
        col = c("black","grey20","grey50","grey70","red"))
+       
+############################
+# TOC Art
+#############################       
+ 
+nms_base <- nomigr_single[nomigr_single$treat =="1_1_1", -1]
+names(nms_base)[1:3] = c("Time","Ni","Nj")
+pdf("TOC_art.pdf", width = 12, height = 9)
+par(cex=2)
+plot(nms$Time, nms$Ni, type = "l", lty = 1,lwd =2, ylim = c(0,3200), xlim= c(0,1000), axes = F, xlab="", ylab="")
+lines(nms_base$Time, nms_base$Ni, lty = 2,lwd = 2, ylim = c(0,3200), col = "grey20")
+axis(1, labels=F, lwd = 2)
+axis(2, labels=F, lwd = 2)
+mtext("Time", 1, cex=3, line = 1)
+mtext("Population size", 2, cex=3, line = 1, las =0)
+legend("bottomright", legend= c("With pesticide", "Without pesticide"), lty = c(1,2), lwd = c(2,2), bty= "n")
+
+# identify 0.9 K for baseline series
+base_rw1 <- which(nms_base$Ni < 0.9*nms_base$Ni[1] )[1]
+base_rw2 <- which(nms_base$Ni > 0.9*nms_base$Ni[1] )[base_rw1+1]
+pest_rw3 <- which(nms$Ni > 0.9*nms_base$Ni[1] )[base_rw1+1]
+
+arrows(x0 = base_rw2,  , y0 = nms_base$Ni[base_rw2], x1 = pest_rw3, y1 = nms$Ni[pest_rw3], lwd = 2.5, col = "red", code = 3)
+text(x = base_rw2+ (pest_rw3-base_rw2)/2, y = 3100,  "Recovery time", col = "red" , cex = 1.2)
+dev.off() 
+      
 
 ############################
 # Figure 2
