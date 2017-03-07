@@ -129,7 +129,7 @@ ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) +
 #        strip.text = element_text(size=rel(1.1))) +
   
 # uncomment to save  
-# ggsave("Figure_2.pdf",device="pdf",height=12,width=16)
+ggsave("Figure_2.pdf",device="pdf",height=12,width=16)
 
 ############################
 # Figure S1 Migration effects
@@ -145,12 +145,12 @@ ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) +
 
 library(plyr)
 migr.diff <- ddply(dat_f, c("mor_red","em_red","gro_red"), summarize,
-                  "Sym_mig vs. no_mig single" = Rec_time[mig == "symm. migration" & exp == "single exposure"] - Rec_time[mig == "no migration" & exp == "single exposure"],
-                         "Sym_mig vs. no_mig multi" = Rec_time[mig == "symm. migration" & exp == "multiple exposure"] - Rec_time[mig == "no migration" & exp == "multiple exposure"],
-                    "Asym_mig vs. no_mig single" = Rec_time[mig == "asymm. migration" & exp == "single exposure"] - Rec_time[mig == "no migration" & exp == "single exposure"],
-                   "Asym_mig vs. no_mig multi" = Rec_time[mig == "asymm. migration" & exp == "multiple exposure"] - Rec_time[mig == "no migration" & exp == "multiple exposure"],
-                    "Asym_mig vs. sym_mig single"  = Rec_time[mig == "asymm. migration" & exp == "single exposure"] - Rec_time[mig == "symm. migration" & exp == "single exposure"],
-                     "Asym_mig vs. sym_mig multi"  = Rec_time[mig == "asymm. migration" & exp == "multiple exposure"] - Rec_time[mig == "symm. migration" & exp == "multiple exposure"])
+                  "Sym_mig vs. no_mig single" = diff[mig == "symm. migration" & exp == "single exposure"] - diff[mig == "no migration" & exp == "single exposure"],
+                         "Sym_mig vs. no_mig multi" = diff[mig == "symm. migration" & exp == "multiple exposure"] - diff[mig == "no migration" & exp == "multiple exposure"],
+                    "Asym_mig vs. no_mig single" = diff[mig == "asymm. migration" & exp == "single exposure"] - diff[mig == "no migration" & exp == "single exposure"],
+                   "Asym_mig vs. no_mig multi" = diff[mig == "asymm. migration" & exp == "multiple exposure"] - diff[mig == "no migration" & exp == "multiple exposure"],
+                    "Asym_mig vs. sym_mig single"  = diff[mig == "asymm. migration" & exp == "single exposure"] - diff[mig == "symm. migration" & exp == "single exposure"],
+                     "Asym_mig vs. sym_mig multi"  = diff[mig == "asymm. migration" & exp == "multiple exposure"] - diff[mig == "symm. migration" & exp == "multiple exposure"])
 
 library(reshape2)
 migr.diff.long <- melt(migr.diff, id = 1:3)
@@ -160,9 +160,9 @@ range(migr.diff.long$value, na.rm = T)
 # NAs only occur in the multiple exposure scenario
 Na.handle <- data.frame(dat_f[dat_f$mig == "symm. migration" & dat_f$exp == "multiple exposure",c("mor_red","em_red","gro_red")])
 # sorting is the same, we extract only for one of the cases
-Na.handle$mul_sym = ifelse(is.na(dat_f$Rec_time[dat_f$mig == "symm. migration" & dat_f$exp == "multiple exposure"]),1,0)
-Na.handle$mul_nm = ifelse(is.na(dat_f$Rec_time[dat_f$mig == "no migration" & dat_f$exp == "multiple exposure"]),1,0)
-Na.handle$mul_asym = ifelse(is.na(dat_f$Rec_time[dat_f$mig == "asymm. migration" & dat_f$exp == "multiple exposure"]),1,0)
+Na.handle$mul_sym = ifelse(is.na(dat_f$diff[dat_f$mig == "symm. migration" & dat_f$exp == "multiple exposure"]),1,0)
+Na.handle$mul_nm = ifelse(is.na(dat_f$diff[dat_f$mig == "no migration" & dat_f$exp == "multiple exposure"]),1,0)
+Na.handle$mul_asym = ifelse(is.na(dat_f$diff[dat_f$mig == "asymm. migration" & dat_f$exp == "multiple exposure"]),1,0)
 	
 migr.diff.long.mod <- merge(migr.diff.long, Na.handle, by = c("mor_red","em_red","gro_red"), sort = F) 
 # crucial for for getting the gray values in the correct fields (otherwise everything will mess up!!!)
@@ -264,7 +264,7 @@ ggplot(dat_f_mig, aes(x = em_red, y = gro_red, fill = diff_min_perc)) +
   theme_minimal(base_size=15) 
 
 # uncomment to save
-# ggsave("Figure_3.pdf",device="pdf",height=12,width=16)
+ggsave("Figure_3.pdf",device="pdf",height=12,width=16)
 
 ######################################################
 # Extinction for scenario without migration
