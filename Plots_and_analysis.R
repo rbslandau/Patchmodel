@@ -114,6 +114,7 @@ ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) +
   facet_grid(mor_red ~ exp + mig, labeller = labeller(.rows=as_labeller(eff.lab))) +
   labs(x = "Reduction of emergence", y = "Reduction in growth", fill = "Recovery time")+
   #scale_fill_gradientn(colors = c("darkblue","gold","darkred")) + 
+  geom_text(aes(label = diff)) +
   scale_fill_gradientn(colors = rev(c(rgb(215,48,39, maxColorValue = 256),
                                       rgb(252,141,89, maxColorValue = 256),
                                       rgb(254,224,144, maxColorValue = 256),
@@ -191,6 +192,7 @@ p1 <- ggplot(migr.diff.long, aes(x = em_red, y = gro_red)) +
   geom_raster(data = subset(migr.diff.long.mod.sort, is.na(value)),fill = check_data_mig$na.value) +
   facet_grid(mor_red ~ variable, labeller = labeller(.rows=as_labeller(eff.lab))) +
   labs(x = "Reduction of emergence", y = "Reduction in growth", fill = "Difference in \n recovery time")+
+  geom_text(aes(label = value)) +
   scale_fill_gradientn(colors = rev(c(rgb(215,48,39,maxColorValue = 256),
                                       rgb(252,141,89,maxColorValue = 256),
                                       rgb(254,224,144,maxColorValue = 256),
@@ -360,42 +362,45 @@ write.csv(fin_rank_exp, "results/fin_rank_exp.csv", row.names=F)
 
 library(sensitivity)
 library(plotrix)
-library(colorRamps)
+#library(colorRamps)
 
 outfile <- "Figure_S2"
 pdf(file = file.path(getwd(), paste0(outfile, ".pdf")),
     width = 25, height = 20)
 
-par(mfrow = c(8,8), mar = c(2,3,1,2))
+par(mfrow = c(8,8), mar = c(2,1.1,1,2),oma = c(8,2,0,0))
 for (i in 1:length(factor.levels)) {
-# plot first order sensitivity indices with CI:
-plotCI(x = 1:6,y = sens.out.S2.1.noStructuralChanges$S[,1,i],
-       col = matlab.like(6)[order(order(sens.out.S2.1.noStructuralChanges$S[,1,i],decreasing = T))],
-       ylim = c(0,1),xlim = c(1,6.5),pch = 16,
-       ylab = "sensitivity indices",xlab = "parameters",
-       li=as.vector(sens.out.S2.1.noStructuralChanges$S[,"min. c.i.",i]), 
-       ui=as.vector(sens.out.S2.1.noStructuralChanges$S[,"max. c.i.",i]),
-       sfrac = 0,las = 1,cex = 1.4,xaxt = "n")
-title(factor.levels[i],line = -1,adj = 0)
-axis(1,at = 1:6,labels = c(expression(epsilon['linst']),
-                           expression(epsilon['adult']),expression('d'['linst']),
-                           expression('d'['adult']),"s",expression('day'['pesticide'])))
-par(new=TRUE)
-
-#plot total effect sensitivity indices with CI
-plotCI(x = seq(1.2,6.2,by = 1),sens.out.S2.1.noStructuralChanges$T[,1,i],
-       li=as.vector(sens.out.S2.1.noStructuralChanges$T[,"min. c.i.",i]), 
-       ui=as.vector(sens.out.S2.1.noStructuralChanges$T[,"max. c.i.",i]),
-     ylim = c(0,1),xlim = c(1,6.5),
-     xlab = "",ylab = "",
-     pch = 17,sfrac = 0,cex = 1.2,
-     axes = FALSE)
-# legend
-#legend("topright",
-#       c("first order effects","total effects"),
-#       pch = c(1,17))
+  # plot first order sensitivity indices with CI:
+  plotCI(x = c(1:5,6.2),y = sens.out.S2.1.noStructuralChanges$S[,1,i],
+         col = gray.colors(6,start = 0.2,end = 0.8)[order(order(sens.out.S2.1.noStructuralChanges$S[,1,i],decreasing = T))],
+         ylim = c(-0.1,1.1),xlim = c(1,6.7),pch = 16,
+         ylab = "sensitivity indices",xlab = "parameters",
+         li=as.vector(sens.out.S2.1.noStructuralChanges$S[,"min. c.i.",i]), 
+         ui=as.vector(sens.out.S2.1.noStructuralChanges$S[,"max. c.i.",i]),
+         sfrac = 0,las = 1,cex = 2.5,cex.axis = 1.5,xaxt = "n")
+  title(factor.levels[i],line = -2,adj = 0.05,cex.main = 2.5)
+  axis(1,at = c(1:5,6.2),mgp = c(3.5, 1.5, 0),cex.axis = 1.8,
+       labels = c(expression(epsilon['linst']),
+                             expression(epsilon['adult']),expression('d'['linst']),
+                             expression('d'['adult']),"s",expression('day'['pesticide'])))
+  par(new=TRUE)
+  
+  #plot total effect sensitivity indices with CI
+  plotCI(x = c(seq(1.3,5.3,by = 1),6.5),sens.out.S2.1.noStructuralChanges$T[,1,i],
+         li=as.vector(sens.out.S2.1.noStructuralChanges$T[,"min. c.i.",i]), 
+         ui=as.vector(sens.out.S2.1.noStructuralChanges$T[,"max. c.i.",i]),
+         ylim = c(-0.1,1.1),xlim = c(1,6.7),
+         xlab = "",ylab = "",
+         pch = 17,sfrac = 0,cex = 2.5,
+         axes = FALSE)
 
 }
+# legend
+par(fig = c(0, 1, 0, 1), oma = c(1, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("bottom",horiz = T,
+       c("first order effects","total effects"),
+       pch = c(16,17), col = c("gray40", "black"),cex = 2.5)
 dev.off()
 
 # ------------------------------------------------------------------------------------ #
@@ -417,38 +422,40 @@ outfile <- "Figure_S3"
 pdf(file = file.path(getwd(), paste0(outfile, ".pdf")),
     width = 25, height = 20)
 
-par(mfrow = c(8,8), mar = c(2,3,1,2))
+par(mfrow = c(8,8), mar = c(2,1.1,1,2),oma = c(8,2,0,0))
 for(i in 1:length(factor.levels)) {
   
-# plot first order sensitivity indices with CI: 
-plotCI(x = 1:8,y = sens.out.S2.1.allParams$S[,1,i],
-       col = matlab.like(8)[order(order(sens.out.S2.1.allParams$S[,1,i],decreasing = T))],
-       ylim = c(0,1),xlim = c(1,8.5),pch = 16,
-       ylab = "",xlab = "",
-       li=as.vector(sens.out.S2.1.allParams$S[,"min. c.i.",i]), 
-       ui=as.vector(sens.out.S2.1.allParams$S[,"max. c.i.",i]),
-       sfrac = 0,las = 1,cex = 1.4,xaxt = "n")
-title(factor.levels[i],line = -1,adj = 0)
-axis(1,at = 1:8,labels = c(expression(epsilon['linst']),
-                           expression(epsilon['adult']),expression('d'['linst']),
-                           expression('d'['adult']),"s",expression('day'['pesticide']),
-                           expression('l'['adult']),expression('l'['eggs'])))
-par(new=TRUE)
-
-#plot total effect sensitivity indices with CI
-plotCI(x = seq(1.2,8.2,by = 1),sens.out.S2.1.allParams$T[,1,i],
-       li=as.vector(sens.out.S2.1.allParams$T[,"min. c.i.",i]), 
-       ui=as.vector(sens.out.S2.1.allParams$T[,"max. c.i.",i]),
-       ylim = c(0,1),xlim = c(1,8.5),
-       xlab = "",ylab = "",
-       pch = 17,sfrac = 0,cex = 1.2,
-       axes = FALSE)
-# legend
-# legend("topright",
-#        c("first order effects","total effects"),
-#        pch = c(1,17))
+  # plot first order sensitivity indices with CI: 
+  plotCI(x = seq(1,10.1,by = 1.3),y = sens.out.S2.1.allParams$S[,1,i],
+         col = gray.colors(8,start = 0.2,end = 0.8)[order(order(sens.out.S2.1.allParams$S[,1,i],decreasing = T))],
+         ylim = c(-0.1,1.1),xlim = c(1,11),pch = 16,
+         ylab = "",xlab = "",
+         li=as.vector(sens.out.S2.1.allParams$S[,"min. c.i.",i]), 
+         ui=as.vector(sens.out.S2.1.allParams$S[,"max. c.i.",i]),
+         sfrac = 0,las = 1,cex = 2.5,cex.axis = 1.5,xaxt = "n")
+  title(factor.levels[i],line = -2,adj = 0.05,cex.main = 2.5)
+  axis(1,at = seq(1,10.1,by = 1.3),mgp = c(3.5, 1.5, 0),cex.axis = 1.25,labels = c(expression(epsilon['linst']),
+                             expression(epsilon['adult']),expression('d'['linst']),
+                             expression('d'['adult']),"s",expression('day'['pest.']),
+                             expression('l'['adult']),expression('l'['eggs'])))
+  par(new=TRUE)
+  
+  #plot total effect sensitivity indices with CI
+  plotCI(x = seq(1.5,11,by = 1.3),sens.out.S2.1.allParams$T[,1,i],
+         li=as.vector(sens.out.S2.1.allParams$T[,"min. c.i.",i]), 
+         ui=as.vector(sens.out.S2.1.allParams$T[,"max. c.i.",i]),
+         ylim = c(-0.1,1.1),xlim = c(1,11),
+         xlab = "",ylab = "",
+         pch = 17,sfrac = 0,cex = 2.5,
+         axes = FALSE)
 
 }
+# legend
+par(fig = c(0, 1, 0, 1), oma = c(1, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("bottom",horiz = T,
+       c("first order effects","total effects"),
+       pch = c(16,17), col = c("gray40", "black"),cex = 2.5)
 
 dev.off()
 
@@ -620,7 +627,6 @@ plot.6param.sens.ind("75-50-50")
 plot.6param.sens.ind("50-0-0")
 dev.off()
 
-
 # plot first order indices and cluster analysis of 8 parameters: 
 pdf("Figure_S4.pdf", height=8, width=14)
 
@@ -641,13 +647,3 @@ plot.8param.sens.ind("50-50-25")
 # 0-25-0
 plot.8param.sens.ind("0-25-0")
 dev.off()
-
-
-
-
-
-
-
-
-
-
