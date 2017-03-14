@@ -20,17 +20,22 @@ mm <- migr_multi[migr_multi$treat =="0.25_0.25_0.25", -1]
 names(nms)[1:3] = names(ms)[1:3] = names(nmm)[1:3] = names(mm)[1:3] = c("Time","Ni","Nj")
 
 # create Figure 1
-par(cex=1.5, las=1)
-plot(nms$Time, nms$Ni, type = "l", lty = 1,lwd =2, ylim = c(0,3200), xlab = "time [d]", ylab = "N")
+pdf("Figure_1.pdf",height=7,width=12)
+par(cex=1.5, las=1,bty="l", mar=c(4,4,1,1))
+plot(nms$Time, nms$Ni, type = "l", lty = 1,lwd =2, ylim = c(0,3250), xlab = "time [d]", ylab = "N")
 lines(ms$Time, ms$Ni, lty = 2,lwd = 2, ylim = c(0,3200), col = "grey20")
 lines(nmm$Time, nmm$Ni,lty = 3,lwd = 2, ylim = c(0,3200), col = "grey50")
 lines(mm$Time, mm$Ni, lty = 4,lwd = 2, ylim = c(0,3200), col = "grey70")
-legend(50, 3300,
-       c("Nomig_s","Mig_s","Nomig_m","Mig_m"),
+legend(#50, 3300,
+       #c("Nomig_s","Mig_s","Nomig_m","Mig_m"),
+      "top",
+       c("NoMig-SingEx",expression("Mig"["sym"]*"-SingEx"),"NoMig-MultEx",expression("Mig"["sym"]*"-MultEx")),
        lty = c(1,2,3,4),
        lwd = c(2,2,2,2),
        cex = 0.8,
-       col = c("black","grey20","grey50","grey70","red"))
+       col = c("black","grey20","grey50","grey70","red"),
+       ncol = 4)
+dev.off()
        
 ############################
 # TOC Art
@@ -38,10 +43,10 @@ legend(50, 3300,
  
 nms_base <- nomigr_single[nomigr_single$treat =="1_1_1", -1]
 names(nms_base)[1:3] = c("Time","Ni","Nj")
-pdf("TOC_art.pdf", width = 12, height = 9)
-par(cex=2)
-plot(nms$Time, nms$Ni, type = "l", lty = 1,lwd =2, ylim = c(0,3200), xlim= c(0,1000), axes = F, xlab="", ylab="")
-lines(nms_base$Time, nms_base$Ni, lty = 2,lwd = 2, ylim = c(0,3200), col = "grey20")
+pdf("TOC_art.pdf", width = 12, height = 7)
+par(cex=2, mar=c(2.5,3,1,1),bty="l", lwd=2)
+plot(nms$Time, nms$Ni, type = "l", lty = 1,lwd =3, ylim = c(0,3200), xlim = c(0,1000), xaxt = "n", yaxt = "n", xlab = "", ylab = "")
+lines(nms_base$Time, nms_base$Ni, lty = 2,lwd = 3, ylim = c(0,3200), col = "grey20")
 axis(1, labels=F, lwd = 2)
 axis(2, labels=F, lwd = 2)
 mtext("Time", 1, cex=3, line = 1)
@@ -53,8 +58,8 @@ base_rw1 <- which(nms_base$Ni < 0.9*nms_base$Ni[1] )[1]
 base_rw2 <- which(nms_base$Ni > 0.9*nms_base$Ni[1] )[base_rw1+1]
 pest_rw3 <- which(nms$Ni > 0.9*nms_base$Ni[1] )[base_rw1+1]
 
-arrows(x0 = base_rw2,  , y0 = nms_base$Ni[base_rw2], x1 = pest_rw3, y1 = nms$Ni[pest_rw3], lwd = 2.5, col = "red", code = 3)
-text(x = base_rw2+ (pest_rw3-base_rw2)/2, y = 3100,  "Recovery time", col = "red" , cex = 1.2)
+arrows(x0 = base_rw2, y0 = nms_base$Ni[base_rw2], x1 = pest_rw3, y1 = nms$Ni[pest_rw3], lwd = 2.5, col = "red", code = 3)
+text(x = base_rw2+ (pest_rw3-base_rw2)/2, y = 3150,  "Recovery time", col = "red" , cex = 1.2)
 dev.off() 
       
 
@@ -100,12 +105,11 @@ dat_f$mor_red <- factor(dat_f$mor_red, levels=c(0.75,0.5,0.25,0))
 dat_f$em_red <- factor(dat_f$em_red, labels =c("0%","25%", "50%", "75%"))
 dat_f$gro_red <- factor(dat_f$gro_red, labels =c("0%","25%", "50%", "75%"))
 
-# prepare plots
 eff.lab <- c(
-  '0' = "no lethal effect",
-  '0.25' = "25% lethal effect",
-  '0.5' = "50% lethal effect",
-  '0.75' = "75% lethal effect")
+  '0' = "no acute mortality",
+  '0.25' = "25% acute mortality",
+  '0.5' = "50% acute mortality",
+  '0.75' = "75% acute mortality")
 
 names(dat_f)[c(3,4)]  <- c("first_below0.9K", "min_ni")
 
@@ -130,7 +134,7 @@ ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) +
 #        strip.text = element_text(size=rel(1.1))) +
   
 # uncomment to save  
-ggsave("Figure_2.pdf",device="pdf",height=12,width=16)
+ggsave("Figure_2.pdf",device="pdf",height=10,width=16)
 
 ############################
 # Figure S1 Migration effects
