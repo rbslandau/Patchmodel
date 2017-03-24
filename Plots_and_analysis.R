@@ -21,6 +21,8 @@ names(nms)[1:3] = names(ms)[1:3] = names(nmm)[1:3] = names(mm)[1:3] = c("Time","
 
 # create Figure 1
 pdf("Figure_1.pdf",height=7,width=12)
+# png("Figure_1.png",height=700,width=1200)
+
 par(cex=1.5, las=1,bty="l", mar=c(4,4,1,1))
 plot(nms$Time, nms$Ni, type = "l", lty = 1,lwd =2, ylim = c(0,3250), xlab = "time [d]", ylab = "N")
 lines(ms$Time, ms$Ni, lty = 2,lwd = 2, ylim = c(0,3200), col = "grey20")
@@ -135,7 +137,7 @@ ggplot(dat_f, aes(x = em_red, y = gro_red, fill = diff)) +
   
 # uncomment to save  
 ggsave("Figure_2.pdf",device="pdf",height=10,width=16)
-
+# ggsave("Figure_2.png",device="png",height=10,width=16)
 ############################
 # Figure S1 Migration effects
 ############################
@@ -232,6 +234,7 @@ legend2 <- tmp2$grobs[[leg2]]
 
 library("grid")
 pdf("Figure_S1.pdf", width = 18, height = 10) 
+#png("Figure_S1.png", width = 1800, height = 1000) 
 # plot 
 grid.newpage()
 pushViewport( viewport( layout = grid.layout( 1 , 2 , widths = unit( c(0.9,0.1) , "npc" ) ) ) ) # define layout
@@ -271,6 +274,7 @@ ggplot(dat_f_mig, aes(x = em_red, y = gro_red, fill = diff_min_perc)) +
 
 # uncomment to save
 ggsave("Figure_3.pdf",device="pdf",height=12,width=16)
+#ggsave("Figure_3.png",device="png",height=12,width=16)
 
 ######################################################
 # Extinction for scenario without migration
