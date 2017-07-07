@@ -87,10 +87,10 @@ simulate.model.sim2.1 = function(X){
   # Reduction of parameters due to pesticide event 
   f_mort <- c(1, 0.75, 0.5, 0.25) # reduces population size of prey (Ni)
   f_emerg <- c(1, 0.75, 0.5, 0.25) # reduces adult rate
-  f_growth <- c(1, 0.75, 0.5, 0.25) # reduces growth rate (r2) in the adult/egg phase
+  f_fecundity <- c(1, 0.75, 0.5, 0.25) # reduces growth rate (r2) in the adult/egg phase
   
   
-  N_E_G = as.matrix(expand.grid(f_mort,f_emerg,f_growth))
+  N_E_G = as.matrix(expand.grid(f_mort,f_emerg,f_fecundity))
   
   # for sensitivity analysis:
   # calculate model for a matrix input

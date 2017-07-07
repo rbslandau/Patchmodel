@@ -29,7 +29,7 @@ theta = 1
 # Methods in Ecology and Evolution 1, 253–262.
 
 # growth rates 
-r_linst <- -log(1/2)/149 # Mortality rate for water phase
+m_linst <- -log(1/2)/149 # Mortality rate for water phase
 l_earlinst <- 40
 r_earlinst <- -(log((1/0.9^theta-1)*(0.5*K)^theta/(K^theta-(0.5*K)^theta))/(l_earlinst*theta))
 
@@ -50,7 +50,7 @@ day_pesticide = 120 # day where the pesticide enters the water column
 # Reduction of parameters due to pesticide event 
 f_mort <- c(1, 0.75, 0.5, 0.25) # reduces population size of prey (Ni, Nj)
 f_emerg <- c(1, 0.75, 0.5, 0.25) # reduces emergence rate
-f_growth <- c(1, 0.75, 0.5, 0.25) # reduces growth rate (r2) in the adult/egg phase
+f_fecundity <- c(1, 0.75, 0.5, 0.25) # reduces growth rate (r2) in the adult/egg phase
 # ----------------------------------------------------------------------------------- #
 
 # years
@@ -72,7 +72,7 @@ d <- NULL
 
 for (N in f_mort){
   for (E in f_emerg){
-    for (G in f_growth){
+    for (G in f_fecundity){
       
       # -------------------------------------------------------------------- #
       # Multiple exposure at day day_pesticide of each year of the simulation:  
@@ -97,7 +97,7 @@ for (N in f_mort){
                           list(c(dNi,dNj))
                         })
                       },
-                      parms  = c(r1 = r_linst, K = K,d = d_linst, eps_up = eps_linst_up,
+                      parms  = c(r1 = m_linst, K = K,d = d_linst, eps_up = eps_linst_up,
                                  eps_down = eps_linst_down,r2 = 0, s = s, theta = theta),
                       times  = c(from = 1, to = day_pesticide, by = 1),
                       init   = c(Ni = N_year[j,1],Nj = N_year[j,2]),
@@ -128,7 +128,7 @@ for (N in f_mort){
                             list(c(dNi,dNj))
                           })
                         },
-                        parms  = c(r1 = r_linst, K = K,d = d_linst, eps_up = eps_linst_up, 
+                        parms  = c(r1 = m_linst, K = K,d = d_linst, eps_up = eps_linst_up, 
                                    eps_down = eps_linst_down, r2 = 0, s = s, theta = theta),
                         times  = c(from = day_pesticide, to = 150, by = 1),
                         # Pesticide exposure (f_mort), only Patch I (polluted) effected
@@ -226,9 +226,9 @@ for (N in f_mort){
   }
 } 
  
-names(d) <- c("Day", "N_i", "N_j", "f_mort", "f_emerg", "f_growth")
+names(d) <- c("Day", "N_i", "N_j", "f_mort", "f_emerg", "f_fecundity")
 
-d$treat <- as.factor(paste(d$f_mort,d$f_emerg, d$f_growth, sep="_"))
+d$treat <- as.factor(paste(d$f_mort,d$f_emerg, d$f_fecundity, sep="_"))
 
 # compute minimum of Nj
 min_nj <- do.call("rbind", (as.list(by(d[,3], factor(d$treat), min))))
@@ -270,7 +270,7 @@ diff_temp$diff_min = round(abs(diff_temp[diff_temp$treat=="1_1_1", "min_nj"] - d
 
 # add individual factors
 fac1 <- unique(d[ ,4:6])
-fac1$treat <- as.factor(paste(fac1$f_mort,fac1$f_emerg, fac1$f_growth, sep="_"))
+fac1$treat <- as.factor(paste(fac1$f_mort,fac1$f_emerg, fac1$f_fecundity, sep="_"))
 final <- merge(diff_temp, fac1)
      
 # Plot Ni (Patch I (polluted)) and Nj
@@ -283,8 +283,8 @@ for(I in 1:length(levels(d$treat)))
       legend(20,6980, c("Ni"),lty = 2, lwd=2)
       legend(20,5900, c("Nj"), lty=1, lwd=2)    
         text(c(2200,2200,3200,3200,3200), c(6980,5900,6980,6480,5900), labels=c(
-        paste0(eps_linst_up," / ",eps_linst_down),paste0(eps_adult_up," / ",eps_adult_down), unique(d[d$treat == levels(d$treat)[I],"f_mort"]), unique(d[d$treat == levels(d$treat)[I],"f_emerg"]), unique(d[d$treat == levels(d$treat)[I],"f_growth"])), cex = 0.9)
-      text(c(1700,1700,2800,2800,2800), c(6980,5900,6980,6480,5900), c("eps_linst = ", "eps_adult = ","f_mort =","f_emerg =","f_growth ="), cex = 0.9)
+        paste0(eps_linst_up," / ",eps_linst_down),paste0(eps_adult_up," / ",eps_adult_down), unique(d[d$treat == levels(d$treat)[I],"f_mort"]), unique(d[d$treat == levels(d$treat)[I],"f_emerg"]), unique(d[d$treat == levels(d$treat)[I],"f_fecundity"])), cex = 0.9)
+      text(c(1700,1700,2800,2800,2800), c(6980,5900,6980,6480,5900), c("eps_linst = ", "eps_adult = ","f_mort =","f_emerg =","f_fecundity ="), cex = 0.9)
    dev.off()                                                                    
 }
 
