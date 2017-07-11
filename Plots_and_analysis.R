@@ -54,6 +54,8 @@ axis(2, labels=F, lwd = 2)
 mtext("Time", 1, cex=3, line = 1)
 mtext("Population size", 2, cex=3, line = 1, las =0)
 legend("bottomright", legend= c("With pesticide", "Without pesticide"), lty = c(1,2), lwd = c(2,2), bty= "n")
+abline(h = 2700, lwd = 1.5, lty = 3, col = "blue")
+text(850, 2900, "0.9 K", col = "blue", cex = 1.2)
 
 # identify 0.9 K for baseline series
 base_rw1 <- which(nms_base$Ni < 0.9*nms_base$Ni[1] )[1]
@@ -62,6 +64,10 @@ pest_rw3 <- which(nms$Ni > 0.9*nms_base$Ni[1] )[base_rw1+1]
 
 arrows(x0 = base_rw2, y0 = nms_base$Ni[base_rw2], x1 = pest_rw3, y1 = nms$Ni[pest_rw3], lwd = 2.5, col = "red", code = 3)
 text(x = base_rw2+ (pest_rw3-base_rw2)/2, y = 3150,  "Recovery time", col = "red" , cex = 1.2)
+# indicate pesticide effect at day 121
+arrows(x0 = 121, y0 = 1800, x1 = 121, y1 = 2300, lwd = 2.5, col = "green", code = 1)
+text(x = 121, y = 2500,  "Pesticide \n exposure", col = "green" , cex = 0.9)
+
 dev.off() 
       
 
