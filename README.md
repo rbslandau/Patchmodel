@@ -1,7 +1,7 @@
 Repo for the publication "Assessing recovery of stream insects from pesticides using a two-patch metapopulation model"
 ====================================================================================================================
 
-This repo contains the scripts for the related publication under review
+This repo contains the scripts for the related publication in [Science of The Total Environment 609: 788-798 (2017)](http://www.sciencedirect.com/science/article/pii/S0048969717319393)
 
 Scripts written by Bernhard Kühn, Larissa Hauer, Mira Kattwinkel and Ralf B. Schäfer
   
