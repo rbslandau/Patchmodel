@@ -1,2 +1,3 @@
 *ignore list
 .Rhistory
+.DS_Store
